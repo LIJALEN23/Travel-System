@@ -1,0 +1,58 @@
+### 1. 注册用户
+POST http://localhost:8080/user/register
+Content-Type: application/json
+
+{
+  "account": "student",
+  "password": "123456",
+  "realName": "张三",
+  "phone": "13800138000",
+  "email": "test@qq.com",
+  "role": "user",
+  "status": 1,
+  "remark": "注册测试"
+}
+
+### 2. 登录 → 自动获取 token
+POST http://localhost:8080/user/login
+Content-Type: application/json
+
+{
+  "account": "student",
+  "password": "123456"
+}
+
+> {%
+    client.global.set("token", response.body.data.token);
+%}
+
+### 3. 景区列表
+GET http://localhost:8080/spot/list
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### 4. 景区详情（id=1）
+GET http://localhost:8080/spot/detail?id=1
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### 5. 景区名称下拉列表
+GET http://localhost:8080/spot/nameList
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### ====================== 酒店模块（需登录）======================
+### 6. 酒店列表
+GET http://localhost:8080/hotel/list
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### 7. 酒店详情（id=1）
+GET http://localhost:8080/hotel/detail?id=1
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### 8. 酒店名称下拉列表
+GET http://localhost:8080/hotel/nameList
+Accept: application/json
+Authorization: Bearer {{token}}

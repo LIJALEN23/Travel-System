@@ -1,2 +1,10 @@
 # Travel-System
-NULL
+
+## Database
+
+## Backend
+
+## Frontend
+
+## Docs
+

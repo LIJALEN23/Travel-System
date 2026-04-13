@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.swu.tourismmanagesystem.mapper.HotelMapper">
+
+    <!-- 1. 查询所有饭店 -->
+    <select id="selectAllHotel" resultType="com.swu.tourismmanagesystem.entity.hotel.HotelBase">
+        SELECT * FROM hotel_base
+    </select>
+
+    <!-- 2. 根据ID查询饭店详情 -->
+    <select id="selectHotelDetailById" resultType="java.util.Map">
+        SELECT * FROM hotel_base WHERE id = #{hotelId}
+    </select>
+
+    <!-- 3. 查询饭店管理人员 -->
+    <select id="selectManagerByHotelId" resultType="com.swu.tourismmanagesystem.entity.hotel.HotelManager">
+        SELECT * FROM hotel_manager WHERE hotel_id = #{hotelId}
+    </select>
+
+    <!-- 4. 查询应急救援信息 -->
+    <select id="selectEmergencyByHotelId" resultType="com.swu.tourismmanagesystem.entity.hotel.HotelEmergency">
+        SELECT * FROM hotel_emergency WHERE hotel_id = #{hotelId}
+    </select>
+
+    <!-- 5. 查询实时数据（入住率、剩余车位等） -->
+    <select id="selectRealDataByHotelId" resultType="com.swu.tourismmanagesystem.entity.hotel.HotelRealTimeData">
+        SELECT * FROM hotel_real_time_data WHERE hotel_id = #{hotelId}
+    </select>
+
+    <!-- ==================== 组合条件查询（模糊+星级+开业） ==================== -->
+    <select id="selectHotelByCondition" resultType="com.swu.tourismmanagesystem.entity.hotel.HotelBase">
+        SELECT * FROM hotel_base
+        WHERE status = 1  <!-- 只显示开业酒店 -->
+
+        <if test="hotelName != null and hotelName != ''">
+            AND hotel_name LIKE CONCAT('%', #{hotelName}, '%')
+        </if>
+
+        <if test="starLevel != null">
+            AND star_level = #{starLevel}
+        </if>
+    </select>
+</mapper>
+
