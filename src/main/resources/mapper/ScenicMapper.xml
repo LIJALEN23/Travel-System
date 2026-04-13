@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.swu.tourismmanagesystem.mapper.ScenicMapper">
+
+    <!-- 景区查询所有 -->
+    <select id="selectSpotAll" resultType="com.swu.tourismmanagesystem.entity.scenic.ScenicSpot">
+        SELECT * FROM scenic_spot
+    </select>
+
+    <!-- 景区根据ID查询 -->
+    <select id="selectSpotById" resultType="com.swu.tourismmanagesystem.entity.scenic.ScenicSpot">
+        SELECT * FROM scenic_spot WHERE id=#{id}
+    </select>
+
+    <!-- 根据景区名称 模糊查询 -->
+    <select id="selectSpotByName" resultType="com.swu.tourismmanagesystem.entity.scenic.ScenicSpot">
+        SELECT * FROM scenic_spot
+        WHERE spot_name LIKE CONCAT('%', #{spotName}, '%')
+    </select>
+    <!-- 新增景区 -->
+    <insert id="insertSpot">
+        INSERT INTO scenic_spot(spot_name, max_capacity, total_parking, address, longitude, latitude, map_url)
+        VALUES(#{spotName}, #{maxCapacity}, #{totalParking}, #{address}, #{longitude}, #{latitude}, #{mapUrl})
+    </insert>
+
+    <!-- 修改景区 -->
+    <update id="updateSpot">
+        UPDATE scenic_spot
+        SET spot_name=#{spotName}, max_capacity=#{maxCapacity}, total_parking=#{totalParking},
+            address=#{address}, longitude=#{longitude}, latitude=#{latitude}, map_url=#{mapUrl}
+        WHERE id=#{id}
+    </update>
+
+    <!-- 删除景区 -->
+    <delete id="deleteSpot">
+        DELETE FROM scenic_spot WHERE id=#{id}
+    </delete>
+
+    <!-- ===================================================== -->
+
+    <!-- 查询景区管理人员 -->
+    <select id="selectManagerBySpotId" resultType="com.swu.tourismmanagesystem.entity.scenic.ScenicManager">
+        SELECT * FROM scenic_manager WHERE spot_id=#{spotId}
+    </select>
+
+    <!-- 新增管理人员 -->
+    <insert id="insertManager">
+        INSERT INTO scenic_manager(spot_id, work_no, manager_name, phone, post)
+        VALUES(#{spotId}, #{workNo}, #{managerName}, #{phone}, #{post})
+    </insert>
+
+    <!-- ===================================================== -->
+
+    <!-- 查询应急救援 -->
+    <select id="selectEmergencyBySpotId" resultType="com.swu.tourismmanagesystem.entity.scenic.ScenicEmergency">
+        SELECT * FROM scenic_emergency WHERE spot_id=#{spotId}
+    </select>
+
+    <!-- 新增应急救援 -->
+    <insert id="insertEmergency">
+        INSERT INTO scenic_emergency(spot_id, rescuer_name, rescuer_phone, vehicle_no)
+        VALUES(#{spotId}, #{rescuerName}, #{rescuerPhone}, #{vehicleNo})
+    </insert>
+
+    <!-- ===================================================== -->
+
+    <!-- 查询实时数据 -->
+    <select id="selectRealDataBySpotId" resultType="com.swu.tourismmanagesystem.entity.scenic.ScenicRealTimeData">
+        SELECT * FROM scenic_real_time_data WHERE spot_id=#{spotId}
+    </select>
+
+    <!-- 更新实时数据 -->
+    <update id="updateRealData">
+        UPDATE scenic_real_time_data
+        SET current_visitors=#{currentVisitors}, remaining_parking=#{remainingParking}, cable_wait_time=#{cableWaitTime}
+        WHERE spot_id=#{spotId}
+    </update>
+
+</mapper>
