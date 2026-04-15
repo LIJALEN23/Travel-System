@@ -23,7 +23,8 @@ public class WebConfig implements WebMvcConfigurer {
                         "/user/register",
                         "/captcha/**",
                         "/static/**",
-                        "/error"
+                        "/error",
+                        "/guide/public/search"      // 游客按姓名查导游
                 );
     }
 }

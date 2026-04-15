@@ -102,6 +102,7 @@ public class AgencyServiceImpl implements AgencyService {
     public List<TravelOrder> getOrderByAgency(Long agencyId) {
         return agencyMapper.listOrderByAgencyId(agencyId);
     }
+    @Override
     public TravelOrder getOrderById(Long orderId){
         return agencyMapper.getOrderById(orderId);
     }
@@ -120,8 +121,9 @@ public class AgencyServiceImpl implements AgencyService {
 
     // ====================== 出境游 ======================
     @Override
-    public List<AbroadTravel> getAbroadByAgency(Long agencyId) {
-        return agencyMapper.listAbroadByAgencyId(agencyId);
+    public List<AbroadTravel> getAbroadByAgency(Long agencyId, String visaStatus) {
+        // 方法名必须和 Mapper.xml 的 id 完全一致
+        return agencyMapper.getAbroadByAgency(agencyId, visaStatus);
     }
     @Override
     public List<AbroadTravel> getWaitAuditAbroad() {

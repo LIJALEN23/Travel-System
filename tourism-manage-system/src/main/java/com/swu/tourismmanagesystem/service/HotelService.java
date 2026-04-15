@@ -8,6 +8,8 @@ public interface HotelService {
 
     // 模糊查询 + 星级筛选
     List<HotelBase> getHotelListByName(String hotelName, Integer starLevel);
+    // ==================== 新增：根据景区ID查酒店 ====================
+    List<HotelBase> findHotelByScenicId(Long scenicId);
 
     // 查询所有酒店
     List<HotelBase> findAllHotel();

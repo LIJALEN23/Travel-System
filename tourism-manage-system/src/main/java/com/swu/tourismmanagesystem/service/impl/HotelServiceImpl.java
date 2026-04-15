@@ -52,7 +52,11 @@ public class HotelServiceImpl implements HotelService {
 
         return detailMap;
     }
-
+    // ==================== 新增：根据景区ID查询酒店 ====================
+    @Override
+    public List<HotelBase> findHotelByScenicId(Long scenicId) {
+        return hotelMapper.selectHotelByScenicId(scenicId);
+    }
     // 获取酒店名称列表
     @Override
     public List<String> getHotelNameList(List<HotelBase> allHotel) {

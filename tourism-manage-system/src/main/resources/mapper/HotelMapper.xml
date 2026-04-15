@@ -7,7 +7,14 @@
     <select id="selectAllHotel" resultType="com.swu.tourismmanagesystem.entity.hotel.HotelBase">
         SELECT * FROM hotel_base
     </select>
-
+    <!-- ==================== 根据景区ID查询关联酒店 ==================== -->
+    <!-- 根据景区ID查询关联酒店 -->
+    <select id="selectHotelByScenicId" resultType="com.swu.tourismmanagesystem.entity.hotel.HotelBase">
+        SELECT h.*
+        FROM hotel_base h
+                 INNER JOIN hotel_scenic_relation r ON h.id = r.hotel_id
+        WHERE r.scenic_id = #{scenicId}
+    </select>
     <!-- 2. 根据ID查询饭店详情 -->
     <select id="selectHotelDetailById" resultType="java.util.Map">
         SELECT * FROM hotel_base WHERE id = #{hotelId}

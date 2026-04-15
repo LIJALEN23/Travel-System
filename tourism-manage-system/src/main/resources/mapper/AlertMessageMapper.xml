@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.swu.tourismmanagesystem.mapper.AlertMessageMapper">
+    <!-- 1. 新增告警/提示信息 -->
+    <insert id="insertMessage" parameterType="com.swu.tourismmanagesystem.entity.alertmessage.AlertMessage">
+        insert into alert_message
+            (msg_type, content, status, operator, leader)
+        values
+            (#{msgType}, #{content}, #{status}, #{operator}, #{leader})
+    </insert>
+
+    <!-- 2. 根据ID查询 -->
+    <select id="getMessageById" resultType="com.swu.tourismmanagesystem.entity.alertmessage.AlertMessage">
+        select * from alert_message where id = #{id}
+    </select>
+
+    <!-- 3. 查询全部列表 -->
+    <select id="getMessageList" resultType="com.swu.tourismmanagesystem.entity.alertmessage.AlertMessage">
+        select * from alert_message order by create_time desc
+    </select>
+
+    <!-- 4. 更新信息（状态、审核人、领导） -->
+    <update id="updateMessage" parameterType="com.swu.tourismmanagesystem.entity.alertmessage.AlertMessage">
+        update alert_message
+        <set>
+            <if test="status != null">status = #{status},</if>
+            <if test="operator != null">operator = #{operator},</if>
+            <if test="leader != null">leader = #{leader},</if>
+            update_time = now()
+        </set>
+        where id = #{id}
+    </update>
+
+    <!-- ===================================================== -->
+    <!-- 5. 新增处置记录 -->
+    <insert id="insertHandle" parameterType="com.swu.tourismmanagesystem.entity.alertmessage.AlertHandle">
+        insert into alert_handle
+            (alert_id, handle_result, handler)
+        values
+            (#{alertId}, #{handleResult}, #{handler})
+    </insert>
+
+    <!-- 6. 根据告警ID查询处置记录 -->
+    <select id="getHandlesByAlertId" resultType="com.swu.tourismmanagesystem.entity.alertmessage.AlertHandle">
+        select * from alert_handle where alert_id = #{alertId} order by handle_time desc
+    </select>
+</mapper>

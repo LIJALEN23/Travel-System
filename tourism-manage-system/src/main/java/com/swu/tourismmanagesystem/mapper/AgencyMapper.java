@@ -48,7 +48,10 @@ public interface AgencyMapper {
     int updateOrderStatus(TravelOrder order);
 
     // ====================== 8. 出境游审核 ======================
-    List<AbroadTravel> listAbroadByAgencyId(Long agencyId);
+    List<AbroadTravel> getAbroadByAgency(
+            @Param("agencyId") Long agencyId,
+            @Param("visaStatus") String visaStatus
+    );
     List<AbroadTravel> listWaitAuditAbroad();
     int insertAbroadTravel(AbroadTravel abroad);
     int updateVisaStatus(AbroadTravel abroad);

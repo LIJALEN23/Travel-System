@@ -2,7 +2,7 @@ package com.swu.tourismmanagesystem.mapper;
 import org.apache.ibatis.annotations.Mapper;
 import com.swu.tourismmanagesystem.entity.guide.*;
 import java.util.List;
-
+import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface GuideMapper {
 
@@ -14,7 +14,10 @@ public interface GuideMapper {
     int deleteGuide(Long id);
     Guide getGuideById(Long id);
     List<Guide> listGuides();
-
+    // 新增：按姓名/电话/身份证 模糊查询
+    List<Guide> listGuidesByLike(@Param("name") String name,
+                                 @Param("phone") String phone,
+                                 @Param("idCard") String idCard);
     // ==========================================
     // 导游资格审核 GuideQualification
     // ==========================================

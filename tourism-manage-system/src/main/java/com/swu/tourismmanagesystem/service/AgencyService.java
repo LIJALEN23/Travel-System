@@ -46,7 +46,7 @@ public interface AgencyService {
     int updateOrderStatus(TravelOrder order);
 
     // ====================== 出境游审核 ======================
-    List<AbroadTravel> getAbroadByAgency(Long agencyId);
+    List<AbroadTravel> getAbroadByAgency(Long agencyId, String visaStatus);
     List<AbroadTravel> getWaitAuditAbroad();
     int addAbroad(AbroadTravel abroad);
     int updateVisa(AbroadTravel abroad);
