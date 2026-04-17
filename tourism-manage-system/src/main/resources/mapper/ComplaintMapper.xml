@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.swu.tourismmanagesystem.mapper.ComplaintMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="ComplaintResultMap" type="com.swu.tourismmanagesystem.entity.complaint.Complaint">
+        <id column="id" property="id"/>
+        <result column="complaint_no" property="complaintNo"/>
+        <result column="visitor_name" property="visitorName"/>
+        <result column="visitor_phone" property="visitorPhone"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="agency_id" property="agencyId"/>
+        <result column="guide_id" property="guideId"/>
+        <result column="level" property="level"/>
+        <result column="handle_user" property="handleUser"/>
+        <result column="handle_result" property="handleResult"/>
+        <result column="handle_time" property="handleTime"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 新增投诉 -->
+    <insert id="insertComplaint">
+        INSERT INTO complaint
+        (complaint_no, visitor_name, visitor_phone, title, content,
+         agency_id, guide_id, level, status)
+        VALUES
+            (#{complaintNo}, #{visitorName}, #{visitorPhone}, #{title}, #{content},
+             #{agencyId}, #{guideId}, #{level}, #{status})
+    </insert>
+
+    <!-- 根据ID查询 -->
+    <select id="getComplaintById" resultMap="ComplaintResultMap">
+        SELECT * FROM complaint WHERE id = #{id}
+    </select>
+
+    <!-- 条件查询列表 -->
+    <select id="listComplaint" resultMap="ComplaintResultMap">
+        SELECT * FROM complaint
+        <where>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="agencyId != null">
+                AND agency_id = #{agencyId}
+            </if>
+            <if test="guideId != null">
+                AND guide_id = #{guideId}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 修改投诉（处理投诉） -->
+    <update id="updateComplaint">
+        UPDATE complaint
+        <set>
+            <if test="handleUser != null">handle_user = #{handleUser},</if>
+            <if test="handleResult != null">handle_result = #{handleResult},</if>
+            <if test="handleTime != null">handle_time = #{handleTime},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="level != null">level = #{level},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除 -->
+    <delete id="deleteComplaint">
+        DELETE FROM complaint WHERE id = #{id}
+    </delete>
+
+</mapper>

@@ -39,7 +39,7 @@ public interface AgencyService {
     int updateRealData(AgencyRealTimeData data);
 
     // ====================== 电子行程单 ======================
-    List<TravelOrder> getOrderByAgency(Long agencyId);
+    List<TravelOrder> getOrderByCondition(Long agencyId, String orderStatus, String teamName, String startTime);
     TravelOrder getOrderById(Long orderId);
     List<TravelOrder> getRunningOrder();
     int addOrder(TravelOrder order);

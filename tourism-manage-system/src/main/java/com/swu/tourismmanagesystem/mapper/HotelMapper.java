@@ -9,7 +9,7 @@ import java.util.Map;
 public interface HotelMapper {
     // 查询所有饭店
     List<HotelBase> selectAllHotel();
-    // ==================== 新增：根据景区ID查询对应酒店 ====================
+    // 根据景区ID查询对应酒店
     List<HotelBase> selectHotelByScenicId(@Param("scenicId") Long scenicId);
     // 根据ID查询饭店详情
     Map<String, Object> selectHotelDetailById(@Param("hotelId") Long hotelId);

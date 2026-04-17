@@ -2,6 +2,7 @@ package com.swu.tourismmanagesystem.config;
 
 import com.swu.tourismmanagesystem.interceptor.LoginInterceptor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -24,7 +25,8 @@ public class WebConfig implements WebMvcConfigurer {
                         "/captcha/**",
                         "/static/**",
                         "/error",
-                        "/guide/public/search"      // 游客按姓名查导游
+                        "/guide/public/search",      // 游客按姓名查导游
+                        "/complaint/submit"      // 新增：游客提交投诉无需登录
                 );
     }
 }

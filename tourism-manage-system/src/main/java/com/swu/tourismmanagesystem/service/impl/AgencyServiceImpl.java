@@ -98,10 +98,12 @@ public class AgencyServiceImpl implements AgencyService {
     }
 
     // ====================== 行程单 ======================
+    // 多条件筛选（新增）
     @Override
-    public List<TravelOrder> getOrderByAgency(Long agencyId) {
-        return agencyMapper.listOrderByAgencyId(agencyId);
+    public List<TravelOrder> getOrderByCondition(Long agencyId, String orderStatus, String teamName, String startTime) {
+        return agencyMapper.listOrderByCondition(agencyId, orderStatus, teamName, startTime);
     }
+
     @Override
     public TravelOrder getOrderById(Long orderId){
         return agencyMapper.getOrderById(orderId);

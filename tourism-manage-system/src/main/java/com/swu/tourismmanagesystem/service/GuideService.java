@@ -2,6 +2,7 @@ package com.swu.tourismmanagesystem.service;
 
 import com.swu.tourismmanagesystem.entity.guide.*;
 import java.util.List;
+import com.swu.tourismmanagesystem.entity.complaint.Complaint;
 
 public interface GuideService {
 
@@ -33,4 +34,10 @@ public interface GuideService {
     int addOrderApply(GuideOrderApply apply);
     int updateOrderApply(GuideOrderApply apply);
     List<GuideOrderApply> getOrderAppliesByAgencyId(Long agencyId);
+    GuideOrderApply getOrderApplyById(Long id);
+    //=====================诚信档案和投诉记录===================
+    // 1. 查询导游诚信档案
+    GuideCredit getGuideCreditByGuideId(Long guideId);
+    // 2. 查询导游投诉记录
+    List<Complaint> getGuideComplaintList(Long guideId, String status);
 }

@@ -31,7 +31,7 @@ GET http://localhost:8080/spot/list
 Accept: application/json
 Authorization: Bearer {{token}}
 
-### 4. 景区详情（id=1）
+### 4. 景区详情（id=1 青城山）
 GET http://localhost:8080/spot/detail?id=1
 Accept: application/json
 Authorization: Bearer {{token}}
@@ -41,18 +41,440 @@ GET http://localhost:8080/spot/nameList
 Accept: application/json
 Authorization: Bearer {{token}}
 
-### ====================== 酒店模块（需登录）======================
-### 6. 酒店列表
+----------------------------------------------------------------------
+
+### 1. 查询【所有酒店】（无任何参数）
 GET http://localhost:8080/hotel/list
 Accept: application/json
 Authorization: Bearer {{token}}
 
-### 7. 酒店详情（id=1）
-GET http://localhost:8080/hotel/detail?id=1
+### 2. 按【酒店名称模糊查询】（例：查“青城”相关酒店）
+GET http://localhost:8080/hotel/list?hotelName=青城
 Accept: application/json
 Authorization: Bearer {{token}}
 
-### 8. 酒店名称下拉列表
-GET http://localhost:8080/hotel/nameList
+### 3. 按【星级筛选】（例：5星酒店）
+GET http://localhost:8080/hotel/list?starLevel=5
 Accept: application/json
+Authorization: Bearer {{token}}
+
+### 4. 按【景区ID查询】（青城山=1）
+GET http://localhost:8080/hotel/list?scenicId=1
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### 5. 【名称 + 星级】组合查询（例：含“温泉”的4星酒店）
+GET http://localhost:8080/hotel/list?hotelName=温泉&starLevel=4
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### 6. 三星堆景区酒店（scenicId=2）
+GET http://localhost:8080/hotel/list?scenicId=2
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### 7. 都江堰景区酒店（scenicId=3）
+GET http://localhost:8080/hotel/list?scenicId=3
+Accept: application/json
+Authorization: Bearer {{token}}
+
+----------------------------------------------------------------------
+
+### 1. 旅行社列表 + 模糊查询（搜索含“国际”的旅行社）
+GET http://localhost:8080/agency/list?agencyName=国际&licenseNo=
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### 2. 旅行社基础信息（id=1 四川省国旅）
+GET http://localhost:8080/agency/baseInfo/1
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### 3. 旅行社管理员信息
+GET http://localhost:8080/agency/manager/1
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### 4. 旅行社所有驾驶员
+GET http://localhost:8080/agency/driver/1
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### 5. 旅行社所有旅游车辆 + 车况
+GET http://localhost:8080/agency/vehicle/1
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### 6. 旅行社应急救援信息
+GET http://localhost:8080/agency/emergency/1
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### 7. 旅行社实时运行数据
+GET http://localhost:8080/agency/realData/1
+Accept: application/json
+Authorization: Bearer {{token}}
+
+----------------------------------------------------------------------
+### 8. 旅行社电子行程单【多条件筛选列表】（必传 agencyId）
+GET http://localhost:8080/agency/order/list?agencyId=1
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### 8‑1. 筛选【待确定】状态的行程单
+GET http://localhost:8080/agency/order/list?agencyId=1&orderStatus=待确定
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### 8‑2. 筛选【青城山】团队名的行程单（模糊）
+GET http://localhost:8080/agency/order/list?agencyId=1&teamName=青城山
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### 8‑3. 组合筛选：待出发 + 团队名含成都
+GET http://localhost:8080/agency/order/list?agencyId=1&orderStatus=待出发&teamName=成都
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### 9. 新增旅行社电子行程单（新接口）
+POST http://localhost:8080/agency/order/add
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "agencyId": 1,
+  "vehicleId": 1,
+  "driverId": 1,
+  "guideId": null,
+  "teamName": "青城山一日游",
+  "peopleCount": 22,
+  "startAddress": "重庆",
+  "endAddress": "青城山景区",
+  "startTime": "2026-04-20T08:30:00",
+  "orderStatus": "待确定"
+}
+
+### 10. 单个行程单详情 → 显示【司机 + 车辆】
+GET http://localhost:8080/agency/order/detail/1
+Accept: application/json
+Authorization: Bearer {{token}}
+
+----------------------------------------------------------------------
+### 11. 当前旅行社所有出境游申请列表【全部】
+GET http://localhost:8080/agency/abroad/list/1
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### 11‑1. 只查【待审核】的出境申请（筛选功能）
+GET http://localhost:8080/agency/abroad/list/1?visaStatus=待审核
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### 11‑2. 只查【通过】的出境申请
+GET http://localhost:8080/agency/abroad/list/1?visaStatus=通过
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### 11‑3. 只查【驳回】的出境申请
+GET http://localhost:8080/agency/abroad/list/1?visaStatus=驳回
+Accept: application/json
+Authorization: Bearer {{token}}
+
+### 12. 出境游签证审核【通过】
+POST http://localhost:8080/agency/abroad/audit
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "id": 2,
+  "visaStatus": "通过"
+}
+
+### 12‑1. 出境游签证审核【驳回】
+POST http://localhost:8080/agency/abroad/audit
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "id": 2,
+  "visaStatus": "驳回"
+}
+
+### 13. 新增出境游申请
+POST http://localhost:8080/agency/abroad/add
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "agencyId": 1,
+  "teamName": "欧洲十日游",
+  "country": "法国",
+  "visaStatus": "待审核",
+  "applyTime": "2025-01-01T10:00:00"
+}
+
+### 1.1 新增导游（匹配guide表字段）
+POST http://localhost:8080/guide/add
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "agencyId": 2,
+  "name": "梵谷有",
+  "gender": "男",
+  "age": 26,
+  "idCard": "511527200002221853",
+  "phone": "13778978592",
+  "guideLevel": "初级",
+  "workStatus": 1
+}
+
+### 1.2 修改导游信息
+POST http://localhost:8080/guide/update
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "id": 1,
+  "agencyId": 1,
+  "name": "李四",
+  "gender": "男",
+  "age": 36,
+  "idCard": "510123199001011234",
+  "phone": "13700137001",
+  "guideLevel": "高级",
+  "workStatus": 1
+}
+
+### 1.3 删除导游（id=1）
+GET http://localhost:8080/guide/delete/1
+Authorization: Bearer {{token}}
+
+### 1.4 查询单个导游详情（含诚信档案）
+GET http://localhost:8080/guide/info/2
+Authorization: Bearer {{token}}
+
+### 1.5 模糊查询导游（姓名含“李”）
+GET http://localhost:8080/guide/list?name=李
+Authorization: Bearer {{token}}
+
+### 1.6 模糊查询导游（电话含“137”）
+GET http://localhost:8080/guide/list?phone=137
+Authorization: Bearer {{token}}
+
+### 1.7 游客公开查询导游（姓名含“李”，无需token）
+GET http://localhost:8080/guide/public/search?name=李
+
+### 1.8 提交导游资格审核（匹配guide_qualification表字段）
+POST http://localhost:8080/guide/qualification/submit
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "guideId": 1,
+  "qualificationNo": "D123456789",
+  "issueDate": "2020-01-01",
+  "expireDate": "2025-12-31",
+  "checkStatus": 0,
+  "checkRemark": "申请初级导游证审核"
+}
+
+### 1.9 审核导游资格（通过，checkStatus=1）
+POST http://localhost:8080/guide/qualification/audit
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "id": 1,
+  "guideId": 1,
+  "checkStatus": 1,
+  "checkRemark": "资料齐全，审核通过"
+}
+
+### 1.10 查询导游资格信息（guideId=1）
+GET http://localhost:8080/guide/qualification/1
+Authorization: Bearer {{token}}
+
+### 1.11 导游提交求职申请（匹配guide_job_apply表字段）
+POST http://localhost:8080/guide/job/apply
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "guideId": 1,
+  "agencyId": 1,
+  "applyStatus": 0,
+  "applyRemark": "有5年导游经验，熟悉四川景区"
+}
+
+### 1.12 查询旅行社求职申请列表（agencyId=1）
+GET http://localhost:8080/guide/job/applyList/1
+Authorization: Bearer {{token}}
+
+### 1.13 审核导游求职申请（录用，applyStatus=1）
+POST http://localhost:8080/guide/job/audit
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "id": 1,
+  "applyStatus": 1,
+  "applyRemark": "经验丰富，同意录用"
+}
+
+### 1.14 导游申领行程单（仅传必填字段，状态后端自动默认为0）
+POST http://localhost:8080/guide/order/apply
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "guideId": 1,
+  "agencyId": 1,
+  "orderId": 1,
+  "applyReason": "本人熟悉该行程线路，申请担任该团导游"
+}
+
+### 1.15 查询旅行社行程单申领列表（agencyId=1）
+GET http://localhost:8080/guide/order/applyList/1
+Authorization: Bearer {{token}}
+
+### 1.16 审核行程单申领（通过：applyStatus=1）
+POST http://localhost:8080/guide/order/audit
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "id": 2,
+  "applyStatus": 1,
+  "applyReason": "审核通过，同意分配行程单"
+}
+
+### 1.16-1 审核行程单申领（驳回：applyStatus=2）
+POST http://localhost:8080/guide/order/audit
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "id": 2,
+  "applyStatus": 2,
+  "applyReason": "当前导游资质不符，审核驳回"
+}
+
+### 1.17 导游上传实时状态（匹配guide_real_time表字段）
+POST http://localhost:8080/guide/realTime/upload
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "guideId": 1,
+  "orderId": 1,
+  "teamSize": 2,
+  "longitude": 103.8198,
+  "latitude": 30.6638,
+  "workStatus": "带团中"
+}
+
+### 1.18 查询导游实时状态（guideId=1）
+GET http://localhost:8080/guide/realTime/1
+Authorization: Bearer {{token}}
+
+### 1.19 查询导游诚信档案（新增）
+GET http://localhost:8080/guide/credit/1
+Authorization: Bearer {{token}}
+
+### 1.20 查询导游所有投诉记录（新增）
+GET http://localhost:8080/guide/complaint/list/1
+Authorization: Bearer {{token}}
+
+### 1.21 查询导游所有已办结投诉（新增）
+GET http://localhost:8080/guide/complaint/list/1?status=已办结
+Authorization: Bearer {{token}}
+
+### 1.22 查询导游差评/不良投诉（新增）
+GET http://localhost:8080/guide/complaint/bad/1
+Authorization: Bearer {{token}}
+
+#====================== 2. 告警信息接口测试 ======================
+### 2.1 查询所有告警信息
+GET http://localhost:8080/alert/list
+Authorization: Bearer {{token}}
+
+### 2.2 查询单个告警详情（id=1）
+GET http://localhost:8080/alert/get/1
+Authorization: Bearer {{token}}
+
+### 2.3 系统自动检测并生成告警
+GET http://localhost:8080/alert/autoCheck
+Authorization: Bearer {{token}}
+
+### 2.4 值班员审核告警通过（id=1，操作员：值班员张三）
+POST http://localhost:8080/alert/checkPass
+Content-Type: application/x-www-form-urlencoded
+Authorization: Bearer {{token}}
+
+id=1&operator=值班员张三
+
+### 2.5 领导审批并发布告警（id=1，领导：李四）
+POST http://localhost:8080/alert/publish
+Content-Type: application/x-www-form-urlencoded
+Authorization: Bearer {{token}}
+
+id=1&leader=李四
+
+### 2.6 直接处置告警（id=1，处置结果：已处理，处置人：王五）
+POST http://localhost:8080/alert/handle
+Content-Type: application/x-www-form-urlencoded
+Authorization: Bearer {{token}}
+
+id=1&handleResult=已联系景区处理完毕&handler=王五
+
+### 2.7 查询告警处置记录（alertId=1）
+GET http://localhost:8080/alert/handleList/1
+Authorization: Bearer {{token}}
+
+# ====================== 3. 投诉管理接口测试 ======================
+### 3.1 提交投诉
+POST http://localhost:8080/complaint/submit
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "visitorName": "游客张三",
+  "visitorPhone": "13800138000",
+  "level": "一般",
+  "content": "导游服务态度差，未按约定讲解景点",
+  "guideId": 1,
+  "agencyId": 1,
+  "status": "待处理"
+}
+
+### 3.2 处理投诉（id=1，处理人：管理员，处理结果：已道歉，状态：已办结）
+PUT http://localhost:8080/complaint/handle/1
+Content-Type: application/x-www-form-urlencoded
+Authorization: Bearer {{token}}
+
+handleUser=管理员&handleResult=已联系游客道歉并补偿，游客满意&status=已办结
+
+### 3.3 查询所有投诉列表
+GET http://localhost:8080/complaint/list
+Authorization: Bearer {{token}}
+
+### 3.4 按状态查询投诉（待处理）
+GET http://localhost:8080/complaint/list?status=待处理
+Authorization: Bearer {{token}}
+
+### 3.5 按旅行社ID查询投诉（agencyId=1）
+GET http://localhost:8080/complaint/list?agencyId=1
+Authorization: Bearer {{token}}
+
+### 3.6 按导游ID查询投诉（guideId=1）
+GET http://localhost:8080/complaint/list?guideId=1
+Authorization: Bearer {{token}}
+
+### 3.7 查询单个投诉详情（id=1）
+GET http://localhost:8080/complaint/1
+Authorization: Bearer {{token}}
+
+### 3.8 删除投诉（id=1）
+DELETE http://localhost:8080/complaint/1
 Authorization: Bearer {{token}}

@@ -112,16 +112,48 @@ public class AgencyController {
     // ==========================
     // 8. 该旅行社所有电子行程单
     // ==========================
-    @GetMapping("/order/list/{agencyId}")
-    public Map<String, Object> orderList(@PathVariable Long agencyId) {
+    @GetMapping("/order/list")
+    public Map<String, Object> orderList(
+            @RequestParam Long agencyId,  // 必传：旅行社ID
+            @RequestParam(required = false) String orderStatus,  // 可选：行程状态
+            @RequestParam(required = false) String teamName,     // 可选：团队名称（模糊）
+            @RequestParam(required = false) String startTime      // 可选：出发时间
+    ) {
         Map<String, Object> res = new HashMap<>();
-        List<TravelOrder> list = agencyService.getOrderByAgency(agencyId);
+        List<TravelOrder> list = agencyService.getOrderByCondition(agencyId, orderStatus, teamName, startTime);
         res.put("code", 200);
-        res.put("msg", "查询行程单列表成功");
+        res.put("msg", "筛选行程单成功");
         res.put("data", list);
         return res;
     }
+    //========添加行程单========
+    @PostMapping("/order/add")
+    public Map<String, Object> addOrder(@RequestBody TravelOrder order) {
+        Map<String, Object> res = new HashMap<>();
 
+        // 必填参数校验
+        if (order.getAgencyId() == null || order.getVehicleId() == null || order.getDriverId() == null) {
+            res.put("code", 400);
+            res.put("msg", "新增失败：旅行社ID、车辆ID、司机ID不能为空");
+            return res;
+        }
+
+        // 默认状态：待确定（贴合你的业务）
+        if (order.getOrderStatus() == null) {
+            order.setOrderStatus("待确定");
+        }
+
+        int rows = agencyService.addOrder(order);
+        if (rows > 0) {
+            res.put("code", 200);
+            res.put("msg", "新增行程单成功");
+            res.put("data", order.getId()); // 返回新增的ID
+        } else {
+            res.put("code", 500);
+            res.put("msg", "新增行程单失败");
+        }
+        return res;
+    }
     // ==========================
     // 9. 单个行程单详情（含司机+车辆）
     // ==========================

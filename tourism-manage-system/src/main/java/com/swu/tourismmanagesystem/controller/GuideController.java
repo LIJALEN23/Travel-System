@@ -7,7 +7,7 @@ import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import com.swu.tourismmanagesystem.entity.complaint.Complaint;
 @RestController
 @RequestMapping("/guide")
 public class GuideController {
@@ -55,9 +55,15 @@ public class GuideController {
             res.put("msg", "导游不存在");
             return res;
         }
+        // 同步查询诚信档案
+        GuideCredit credit = guideService.getGuideCreditByGuideId(id);
+        Map<String, Object> data = new HashMap<>();
+        data.put("guideInfo", guide);
+        data.put("creditInfo", credit);
+
         res.put("code", 200);
         res.put("msg", "查询成功");
-        res.put("data", guide);
+        res.put("data", data);
         return res;
     }
 
@@ -141,11 +147,17 @@ public class GuideController {
     @PostMapping("/order/apply")
     public Map<String, Object> applyOrder(@RequestBody GuideOrderApply apply) {
         Map<String, Object> res = new HashMap<>();
+        if (apply.getGuideId() == null || apply.getAgencyId() == null || apply.getOrderId() == null) {
+            res.put("code", 400);
+            res.put("msg", "申领失败：导游ID/旅行社ID/行程单ID不能为空");
+            return res;
+        }
         guideService.addOrderApply(apply);
         res.put("code", 200);
-        res.put("msg", "申领已提交");
+        res.put("msg", "申领已提交，等待审核");
         return res;
     }
+
 
     @GetMapping("/order/applyList/{agencyId}")
     public Map<String, Object> orderApplyList(@PathVariable Long agencyId) {
@@ -158,9 +170,24 @@ public class GuideController {
     @PostMapping("/order/audit")
     public Map<String, Object> auditOrderApply(@RequestBody GuideOrderApply apply) {
         Map<String, Object> res = new HashMap<>();
-        guideService.updateOrderApply(apply);
+        if (apply.getId() == null || apply.getApplyStatus() == null) {
+            res.put("code", 400);
+            res.put("msg", "审核失败：申领ID和状态不能为空");
+            return res;
+        }
+        int updateRows = guideService.updateOrderApply(apply);
+
+
+        // 如果更新行数=0 → 说明ID不存在，返回错误
+        if (updateRows == 0) {
+            res.put("code", 404);
+            res.put("msg", "审核失败：未找到该申领记录！");
+            return res;
+        }
+
+        // 成功逻辑
         res.put("code", 200);
-        res.put("msg", "审批成功");
+        res.put("msg", apply.getApplyStatus() == 1 ? "审核通过，已分配行程单" : "审核驳回");
         return res;
     }
 
@@ -197,6 +224,50 @@ public class GuideController {
         res.put("code", 200);
         res.put("msg", "查询成功");
         res.put("data", list);
+        return res;
+    }
+    // ==============================
+    // 7. 查询导游的信用档案（按姓名模糊查）
+    // ==============================
+    @GetMapping("/credit/{guideId}")
+    public Map<String, Object> getGuideCredit(@PathVariable Long guideId) {
+        Map<String, Object> res = new HashMap<>();
+        GuideCredit credit = guideService.getGuideCreditByGuideId(guideId);
+        res.put("code", 200);
+        res.put("msg", "诚信信息查询成功");
+        res.put("data", credit);
+        return res;
+    }
+
+    // ==============================
+    // 8. 导游全部投诉记录
+    // ==============================
+    @GetMapping("/complaint/list/{guideId}")
+    public Map<String, Object> getGuideComplaints(
+            @PathVariable Long guideId,
+            @RequestParam(required = false) String status) {
+        Map<String, Object> res = new HashMap<>();
+        List<Complaint> complaints = guideService.getGuideComplaintList(guideId, status);
+        res.put("code", 200);
+        res.put("msg", "投诉记录查询成功");
+        res.put("data", complaints);
+        return res;
+    }
+
+    // ==============================
+    // 9. 仅查询导游【差评/不良投诉】
+    // ==============================
+    @GetMapping("/complaint/bad/{guideId}")
+    public Map<String, Object> getBadComplaints(@PathVariable Long guideId) {
+        Map<String, Object> res = new HashMap<>();
+        // 只查较重、严重等级的投诉 = 差评
+        List<Complaint> badComplaints = guideService.getGuideComplaintList(guideId, null);
+        badComplaints.removeIf(c -> !("较重".equals(c.getLevel()) || "严重".equals(c.getLevel())));
+
+        res.put("code", 200);
+        res.put("msg", "导游差评查询成功");
+        res.put("total", badComplaints.size());
+        res.put("data", badComplaints);
         return res;
     }
 }

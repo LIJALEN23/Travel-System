@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Map;
 
+import com.swu.tourismmanagesystem.constant.AlertConstant;
 @Service
 public class AlertServiceImpl implements AlertService {
 
@@ -32,11 +33,7 @@ public class AlertServiceImpl implements AlertService {
     @Resource
     private AgencyService agencyService;
 
-    // ==================== 阈值配置 ====================
-    private static final int SCENIC_LIMIT = 80;
-    private static final int PARKING_LIMIT = 85;
-    private static final int HOTEL_LIMIT = 90;
-    private static final int CABLE_WAIT_LIMIT = 20;
+
 
     // 去重：同一个景点/酒店只生成一条消息
     private final Set<String> duplicateSet = new HashSet<>();
@@ -64,7 +61,7 @@ public class AlertServiceImpl implements AlertService {
             int max = spot.getMaxCapacity();
             if (max > 0) {
                 int rate = (current * 100) / max;
-                if (rate >= SCENIC_LIMIT) {
+                if (rate >= AlertConstant.SCENIC_LIMIT) {
                     tips.add("游客饱和(" + rate + "%)");
                 }
             }
@@ -75,14 +72,14 @@ public class AlertServiceImpl implements AlertService {
             if (total > 0) {
                 int used = total - remaining;
                 int rate = (used * 100) / total;
-                if (rate >= PARKING_LIMIT) {
+                if (rate >= AlertConstant.PARKING_LIMIT) {
                     tips.add("车位紧张(" + rate + "%)");
                 }
             }
 
             // 缆车等待
             Integer waitTime = real.getCableWaitTime();
-            if (waitTime != null && waitTime >= CABLE_WAIT_LIMIT) {
+            if (waitTime != null && waitTime >= AlertConstant.CABLE_WAIT_LIMIT) {
                 tips.add("缆车等待过久(" + waitTime + "分钟)");
             }
 
@@ -111,7 +108,7 @@ public class AlertServiceImpl implements AlertService {
 
             // 入住率
             double rate = real.getOccupancyRate();
-            if (rate >= HOTEL_LIMIT) {
+            if (rate >= AlertConstant.HOTEL_LIMIT) {
                 tips.add("入住率过高(" + rate + "%)");
             }
 
@@ -121,7 +118,7 @@ public class AlertServiceImpl implements AlertService {
             if (total > 0) {
                 int used = total - remaining;
                 int parkRate = (used * 100) / total;
-                if (parkRate >= PARKING_LIMIT) {
+                if (parkRate >= AlertConstant.PARKING_LIMIT) {
                     tips.add("车位紧张(" + parkRate + "%)");
                 }
             }
