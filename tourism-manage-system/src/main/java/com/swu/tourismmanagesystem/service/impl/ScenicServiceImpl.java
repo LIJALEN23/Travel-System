@@ -46,7 +46,7 @@ public class ScenicServiceImpl implements ScenicService {
         // 基础信息
         ScenicSpot spot = scenicMapper.selectSpotById(id);
         // 实时数据
-        ScenicRealTimeData realData = scenicMapper.selectRealDataBySpotId(id);
+        ScenicRealTimeData realData = scenicMapper.getRealTimeByScenicId(id);
         // 管理人员
         List<ScenicManager> managerList = scenicMapper.selectManagerBySpotId(id);
         // 应急救援
@@ -110,12 +110,21 @@ public class ScenicServiceImpl implements ScenicService {
 
     // 实时数据
     @Override
-    public ScenicRealTimeData findRealDataBySpotId(Long spotId) {
-        return scenicMapper.selectRealDataBySpotId(spotId);
+    public ScenicRealTimeData getRealTimeByScenicId(Long scenicId) {
+        return scenicMapper.getRealTimeByScenicId(scenicId);
     }
 
     @Override
-    public boolean updateRealData(ScenicRealTimeData data) {
-        return scenicMapper.updateRealData(data) > 0;
+    public int insertRealTime(ScenicRealTimeData data) {
+        return scenicMapper.insertRealTime(data);
+    }
+
+    @Override
+    public int updateRealTime(ScenicRealTimeData data) {
+        return scenicMapper.updateRealTime(data);
+    }
+    @Override
+    public List<Long> getScenicIdsWithRealData() {
+        return scenicMapper.selectScenicIdsWithRealData();
     }
 }

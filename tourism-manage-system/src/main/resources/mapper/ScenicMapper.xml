@@ -64,18 +64,43 @@
         VALUES(#{spotId}, #{rescuerName}, #{rescuerPhone}, #{vehicleNo})
     </insert>
 
-    <!-- ===================================================== -->
 
-    <!-- 查询实时数据 -->
-    <select id="selectRealDataBySpotId" resultType="com.swu.tourismmanagesystem.entity.scenic.ScenicRealTimeData">
-        SELECT * FROM scenic_real_time_data WHERE spot_id=#{spotId}
+    <!-- 根据景区ID查询实时数据：字段名匹配数据库，别名映射实体类 -->
+    <select id="getRealTimeByScenicId" resultType="com.swu.tourismmanagesystem.entity.scenic.ScenicRealTimeData">
+        select
+        id,
+        spot_id as spotId,
+        current_visitors as currentVisitors,   <!-- 数据库字段current_visitors → 实体类currentVisitors -->
+        remaining_parking as remainingParking, <!-- 数据库字段remaining_parking → 实体类remainingParking -->
+        cable_wait_time as cableWaitTime,     <!-- 数据库字段cable_wait_time → 实体类cableWaitTime -->
+        update_time as updateTime             <!-- 数据库字段update_time → 实体类updateTime -->
+        from scenic_real_time_data
+        where spot_id = #{spotId}
     </select>
 
-    <!-- 更新实时数据 -->
-    <update id="updateRealData">
-        UPDATE scenic_real_time_data
-        SET current_visitors=#{currentVisitors}, remaining_parking=#{remainingParking}, cable_wait_time=#{cableWaitTime}
-        WHERE spot_id=#{spotId}
-    </update>
+    <!-- 新增实时数据：字段名匹配数据库，参数名匹配实体类 -->
+    <insert id="insertRealTime">
+        insert into scenic_real_time_data (
+            spot_id, current_visitors, remaining_parking, cable_wait_time, update_time
+        ) values (
+                     #{spotId}, #{currentVisitors}, #{remainingParking}, #{cableWaitTime}, NOW()
+                 )
+    </insert>
 
+    <!-- 更新实时数据：字段名匹配数据库，参数名匹配实体类 -->
+    <update id="updateRealTime">
+        update scenic_real_time_data
+        set
+            current_visitors = #{currentVisitors},
+            remaining_parking = #{remainingParking},
+            cable_wait_time = #{cableWaitTime},
+            update_time = NOW()
+        where spot_id = #{spotId}
+    </update>
+    <!--返回所有带有实时数据的景区id-->
+    <select id="selectScenicIdsWithRealData" resultType="java.lang.Long">
+        SELECT DISTINCT spot_id
+        FROM scenic_real_time_data
+        WHERE spot_id IS NOT NULL
+    </select>
 </mapper>

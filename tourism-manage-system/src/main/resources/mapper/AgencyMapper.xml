@@ -15,9 +15,12 @@
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
-    <select id="listTravelAgency" resultMap="travelAgencyMap"> select * from travel_agency </select>
-    <select id="getTravelAgencyById" resultMap="travelAgencyMap"> select * from travel_agency where id=#{id} </select>
-    <!-- 模糊查询旅行社 -->
+    <select id="listTravelAgency" resultMap="travelAgencyMap">
+        select * from travel_agency
+    </select>
+    <select id="getTravelAgencyById" resultMap="travelAgencyMap">
+        select * from travel_agency where id=#{id}
+    </select>
     <select id="findAgencyByLike" resultMap="travelAgencyMap">
         select * from travel_agency
         <where>
@@ -29,9 +32,24 @@
             </if>
         </where>
     </select>
-    <insert id="insertTravelAgency"> insert into travel_agency(agency_name, license_no, credit_level, address, contact_phone, status) values(#{agencyName},#{licenseNo},#{creditLevel},#{address},#{contactPhone},#{status}) </insert>
-    <update id="updateTravelAgency"> update travel_agency set agency_name=#{agencyName},license_no=#{licenseNo},credit_level=#{creditLevel},address=#{address},contact_phone=#{contactPhone},status=#{status},update_time=now() where id=#{id} </update>
-    <delete id="deleteTravelAgency"> delete from travel_agency where id=#{id} </delete>
+    <insert id="insertTravelAgency">
+        insert into travel_agency(agency_name, license_no, credit_level, address, contact_phone, status)
+        values(#{agencyName},#{licenseNo},#{creditLevel},#{address},#{contactPhone},#{status})
+    </insert>
+    <update id="updateTravelAgency">
+        update travel_agency
+        set agency_name=#{agencyName},
+            license_no=#{licenseNo},
+            credit_level=#{creditLevel},
+            address=#{address},
+            contact_phone=#{contactPhone},
+            status=#{status},
+            update_time=now()
+        where id=#{id}
+    </update>
+    <delete id="deleteTravelAgency">
+        delete from travel_agency where id=#{id}
+    </delete>
 
     <!-- ====================== 管理人员 ====================== -->
     <resultMap id="agencyManagerMap" type="com.swu.tourismmanagesystem.entity.agency.AgencyManager">
@@ -44,8 +62,13 @@
         <result column="status" property="status"/>
         <result column="create_time" property="createTime"/>
     </resultMap>
-    <select id="listManagerByAgencyId" resultMap="agencyManagerMap"> select * from agency_manager where agency_id=#{agencyId} </select>
-    <insert id="insertManager"> insert into agency_manager(agency_id,work_no,manager_name,phone,post,status) values(#{agencyId},#{workNo},#{managerName},#{phone},#{post},#{status}) </insert>
+    <select id="listManagerByAgencyId" resultMap="agencyManagerMap">
+        select * from agency_manager where agency_id=#{agencyId}
+    </select>
+    <insert id="insertManager">
+        insert into agency_manager(agency_id,work_no,manager_name,phone,post,status)
+        values(#{agencyId},#{workNo},#{managerName},#{phone},#{post},#{status})
+    </insert>
 
     <!-- ====================== 驾驶员 ====================== -->
     <resultMap id="vehicleDriverMap" type="com.swu.tourismmanagesystem.entity.agency.VehicleDriver">
@@ -61,8 +84,13 @@
     <select id="getDriverById" resultMap="vehicleDriverMap">
         select * from vehicle_driver where id = #{driverId}
     </select>
-    <select id="listDriverByAgencyId" resultMap="vehicleDriverMap"> select * from vehicle_driver where agency_id=#{agencyId} </select>
-    <insert id="insertDriver"> insert into vehicle_driver(agency_id,driver_name,phone,license_type,status) values(#{agencyId},#{driverName},#{phone},#{licenseType},#{status}) </insert>
+    <select id="listDriverByAgencyId" resultMap="vehicleDriverMap">
+        select * from vehicle_driver where agency_id=#{agencyId}
+    </select>
+    <insert id="insertDriver">
+        insert into vehicle_driver(agency_id,driver_name,phone,license_type,status)
+        values(#{agencyId},#{driverName},#{phone},#{licenseType},#{status})
+    </insert>
 
     <!-- ====================== 旅游车辆 ====================== -->
     <resultMap id="tourismVehicleMap" type="com.swu.tourismmanagesystem.entity.agency.TourismVehicle">
@@ -78,8 +106,13 @@
     <select id="getVehicleById" resultMap="tourismVehicleMap">
         select * from tourism_vehicle where id = #{vehicleId}
     </select>
-    <select id="listVehicleByAgencyId" resultMap="tourismVehicleMap"> select * from tourism_vehicle where agency_id=#{agencyId} </select>
-    <insert id="insertVehicle"> insert into tourism_vehicle(agency_id,plate_no,vehicle_type,seat_count,vehicle_status) values(#{agencyId},#{plateNo},#{vehicleType},#{seatCount},#{vehicleStatus}) </insert>
+    <select id="listVehicleByAgencyId" resultMap="tourismVehicleMap">
+        select * from tourism_vehicle where agency_id=#{agencyId}
+    </select>
+    <insert id="insertVehicle">
+        insert into tourism_vehicle(agency_id,plate_no,vehicle_type,seat_count,vehicle_status)
+        values(#{agencyId},#{plateNo},#{vehicleType},#{seatCount},#{vehicleStatus})
+    </insert>
 
     <!-- ====================== 应急救援 ====================== -->
     <resultMap id="agencyEmergencyMap" type="com.swu.tourismmanagesystem.entity.agency.AgencyEmergency">
@@ -90,8 +123,13 @@
         <result column="vehicle_no" property="vehicleNo"/>
         <result column="create_time" property="createTime"/>
     </resultMap>
-    <select id="listEmergencyByAgencyId" resultMap="agencyEmergencyMap"> select * from agency_emergency where agency_id=#{agencyId} </select>
-    <insert id="insertEmergency"> insert into agency_emergency(agency_id,rescuer_name,rescuer_phone,vehicle_no) values(#{agencyId},#{rescuerName},#{rescuerPhone},#{vehicleNo}) </insert>
+    <select id="listEmergencyByAgencyId" resultMap="agencyEmergencyMap">
+        select * from agency_emergency where agency_id=#{agencyId}
+    </select>
+    <insert id="insertEmergency">
+        insert into agency_emergency(agency_id,rescuer_name,rescuer_phone,vehicle_no)
+        values(#{agencyId},#{rescuerName},#{rescuerPhone},#{vehicleNo})
+    </insert>
 
     <!-- ====================== 实时数据 ====================== -->
     <resultMap id="realTimeDataMap" type="com.swu.tourismmanagesystem.entity.agency.AgencyRealTimeData">
@@ -102,8 +140,17 @@
         <result column="online_vehicles" property="onlineVehicles"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
-    <select id="getRealTimeDataByAgencyId" resultMap="realTimeDataMap"> select * from agency_real_time_data where agency_id=#{agencyId} </select>
-    <update id="updateRealTimeData"> update agency_real_time_data set today_teams=#{todayTeams},today_people=#{todayPeople},online_vehicles=#{onlineVehicles},update_time=now() where agency_id=#{agencyId} </update>
+    <select id="getRealTimeDataByAgencyId" resultMap="realTimeDataMap">
+        select * from agency_real_time_data where agency_id=#{agencyId}
+    </select>
+    <update id="updateRealTimeData">
+        update agency_real_time_data
+        set today_teams=#{todayTeams},
+            today_people=#{todayPeople},
+            online_vehicles=#{onlineVehicles},
+            update_time=now()
+        where id=#{id}
+    </update>
 
     <!-- ====================== 电子行程单 ====================== -->
     <resultMap id="travelOrderMap" type="com.swu.tourismmanagesystem.entity.agency.TravelOrder">
@@ -111,6 +158,7 @@
         <result column="agency_id" property="agencyId"/>
         <result column="vehicle_id" property="vehicleId"/>
         <result column="driver_id" property="driverId"/>
+        <result column="guide_id" property="guideId"/>
         <result column="team_name" property="teamName"/>
         <result column="people_count" property="peopleCount"/>
         <result column="start_address" property="startAddress"/>
@@ -120,14 +168,61 @@
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
+
+    <!-- 1. 多条件筛选行程单（核心：支持旅行社+状态+团队名模糊查询） -->
+    <select id="listOrderByCondition" resultMap="travelOrderMap">
+        select * from travel_order
+        <where>
+            agency_id = #{agencyId}
+            <if test="orderStatus != null and orderStatus != ''">
+                and order_status = #{orderStatus}
+            </if>
+            <if test="teamName != null and teamName != ''">
+                and team_name like concat('%', #{teamName}, '%')
+            </if>
+            <if test="startTime != null">
+                and start_time >= #{startTime}
+            </if>
+        </where>
+        order by create_time desc
+    </select>
+
+    <!-- 2. 根据ID查询 -->
     <select id="getOrderById" resultMap="travelOrderMap">
         select * from travel_order where id = #{id}
     </select>
-    <select id="listOrderByAgencyId" resultMap="travelOrderMap"> select * from travel_order where agency_id=#{agencyId} </select>
-    <select id="listRunningOrder" resultMap="travelOrderMap"> select * from travel_order where order_status in ('待出发','运行中') </select>
-    <insert id="insertTravelOrder"> insert into travel_order(agency_id,vehicle_id,driver_id,team_name,people_count,start_address,end_address,start_time,order_status) values(#{agencyId},#{vehicleId},#{driverId},#{teamName},#{peopleCount},#{startAddress},#{endAddress},#{startTime},#{orderStatus}) </insert>
-    <update id="updateOrderStatus"> update travel_order set order_status=#{orderStatus},update_time=now() where id=#{id} </update>
 
+    <!-- 3. 查询运行中订单 -->
+    <select id="listRunningOrder" resultMap="travelOrderMap">
+        select * from travel_order where order_status in ('待出发','运行中')
+    </select>
+
+    <!-- 4. 新增行程单） -->
+    <insert id="insertTravelOrder" useGeneratedKeys="true" keyProperty="id">
+        insert into travel_order(
+            agency_id,vehicle_id,driver_id,guide_id,
+            team_name,people_count,start_address,end_address,
+            start_time,order_status,create_time,update_time
+        )
+        values(
+                  #{agencyId},#{vehicleId},#{driverId},#{guideId},
+                  #{teamName},#{peopleCount},#{startAddress},#{endAddress},
+                  #{startTime},#{orderStatus},now(),now()
+              )
+    </insert>
+
+    <!-- 5. 更新状态 -->
+    <update id="updateOrderStatus">
+        update travel_order set order_status=#{orderStatus},update_time=now() where id=#{id}
+    </update>
+    <!-- 审核通过：更新行程单导游ID + 状态 -->
+    <update id="updateOrderGuideAndStatus">
+        update travel_order
+        set guide_id = #{guideId},
+            order_status = #{orderStatus},
+            update_time = now()
+        where id = #{orderId}
+    </update>
     <!-- ====================== 出境游审核 ====================== -->
     <resultMap id="abroadTravelMap" type="com.swu.tourismmanagesystem.entity.agency.AbroadTravel">
         <id column="id" property="id"/>
@@ -139,10 +234,28 @@
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
-    <select id="listAbroadByAgencyId" resultMap="abroadTravelMap"> select * from abroad_travel where agency_id=#{agencyId} </select>
-    <select id="listWaitAuditAbroad" resultMap="abroadTravelMap"> select * from abroad_travel where visa_status='待审核' </select>
-    <insert id="insertAbroadTravel"> insert into abroad_travel(agency_id,team_name,country,visa_status,apply_time) values(#{agencyId},#{teamName},#{country},#{visaStatus},#{applyTime}) </insert>
-    <update id="updateVisaStatus"> update abroad_travel set visa_status=#{visaStatus},update_time=now() where id=#{id} </update>
+    <!-- 出境游列表：支持按签证状态筛选（全部 / 待审核 / 通过 / 驳回）-->
+    <!-- 这里方法名固定：listAbroadByAgencyId -->
+    <select id="getAbroadByAgency" resultMap="abroadTravelMap">
+        SELECT * FROM abroad_travel
+        <where>
+            agency_id = #{agencyId}
+            <if test="visaStatus != null and visaStatus != ''">
+                AND visa_status = #{visaStatus}
+            </if>
+        </where>
+        ORDER BY id DESC
+    </select>
+    <select id="listWaitAuditAbroad" resultMap="abroadTravelMap">
+        select * from abroad_travel where visa_status='待审核'
+    </select>
+    <insert id="insertAbroadTravel">
+        insert into abroad_travel(agency_id,team_name,country,visa_status,apply_time)
+        values(#{agencyId},#{teamName},#{country},#{visaStatus},#{applyTime})
+    </insert>
+    <update id="updateVisaStatus">
+        update abroad_travel set visa_status=#{visaStatus},update_time=now() where id=#{id}
+    </update>
 
     <!-- ====================== GIS 实时定位 ====================== -->
     <resultMap id="vehicleLocationMap" type="com.swu.tourismmanagesystem.entity.agency.VehicleRealLocation">
@@ -154,12 +267,21 @@
         <result column="vehicle_status" property="vehicleStatus"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
-    <select id="listAllVehicleLocation" resultMap="vehicleLocationMap"> select * from vehicle_real_location </select>
-    <select id="getLocationByVehicleId" resultMap="vehicleLocationMap"> select * from vehicle_real_location where vehicle_id=#{vehicleId} </select>
+    <select id="listAllVehicleLocation" resultMap="vehicleLocationMap">
+        select * from vehicle_real_location
+    </select>
+    <select id="getLocationByVehicleId" resultMap="vehicleLocationMap">
+        select * from vehicle_real_location where vehicle_id=#{vehicleId}
+    </select>
     <insert id="insertOrUpdateLocation">
         insert into vehicle_real_location(vehicle_id,longitude,latitude,speed,vehicle_status)
         values(#{vehicleId},#{longitude},#{latitude},#{speed},#{vehicleStatus})
-            on duplicate key update longitude=#{longitude},latitude=#{latitude},speed=#{speed},vehicle_status=#{vehicleStatus},update_time=now()
+            on duplicate key update
+                                 longitude=#{longitude},
+                                 latitude=#{latitude},
+                                 speed=#{speed},
+                                 vehicle_status=#{vehicleStatus},
+                                 update_time=now()
     </insert>
 
     <!-- ====================== GIS 轨迹历史 ====================== -->
@@ -170,7 +292,45 @@
         <result column="latitude" property="latitude"/>
         <result column="create_time" property="createTime"/>
     </resultMap>
-    <select id="listTrackByVehicleId" resultMap="vehicleTrackMap"> select * from vehicle_track_history where vehicle_id=#{vehicleId} order by create_time asc </select>
-    <insert id="insertVehicleTrack"> insert into vehicle_track_history(vehicle_id,longitude,latitude) values(#{vehicleId},#{longitude},#{latitude}) </insert>
+    <select id="listTrackByVehicleId" resultMap="vehicleTrackMap">
+        select * from vehicle_track_history where vehicle_id=#{vehicleId} order by create_time asc
+    </select>
+    <insert id="insertVehicleTrack">
+        insert into vehicle_track_history(vehicle_id,longitude,latitude)
+        values(#{vehicleId},#{longitude},#{latitude})
+    </insert>
+    <!-- ====================== 11. 旅行社诚信档案 ====================== -->
+    <resultMap id="agencyCreditMap" type="com.swu.tourismmanagesystem.entity.agency.AgencyCredit">
+        <id column="id" property="id"/>
+        <result column="agency_id" property="agencyId"/>
+        <result column="credit_score" property="creditScore"/>
+        <result column="total_complaint" property="totalComplaint"/>
+        <result column="bad_complaint" property="badComplaint"/>
+        <result column="credit_desc" property="creditDesc"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
 
+    <!-- 根据旅行社ID查询诚信档案 -->
+    <select id="getAgencyCreditByAgencyId" resultMap="agencyCreditMap">
+        select * from agency_credit where agency_id=#{agencyId}
+    </select>
+
+    <!-- 新增诚信档案 -->
+    <insert id="insertAgencyCredit">
+        insert into agency_credit(agency_id, credit_score, total_complaint,  bad_complaint, credit_desc)
+        values(#{agencyId}, #{creditScore}, #{totalComplaint},  #{badComplaint}, #{creditDesc})
+    </insert>
+
+    <!-- 更新诚信分数、投诉统计 -->
+    <update id="updateAgencyCredit">
+        update agency_credit
+        <set>
+            <if test="creditScore != null">credit_score = #{creditScore},</if>
+            <if test="totalComplaint != null">total_complaint = #{totalComplaint},</if>
+            <if test="badComplaint != null">bad_complaint = #{badComplaint},</if>
+            <if test="creditDesc != null">credit_desc = #{creditDesc},</if>
+            update_time = now()
+        </set>
+        where agency_id=#{agencyId}
+    </update>
 </mapper>

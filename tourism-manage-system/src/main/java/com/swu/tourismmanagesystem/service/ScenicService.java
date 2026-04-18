@@ -33,6 +33,8 @@ public interface ScenicService {
     boolean addEmergency(ScenicEmergency emergency);
 
     //==========实时数据===========
-    ScenicRealTimeData findRealDataBySpotId(Long spotId);
-    boolean updateRealData(ScenicRealTimeData data);
+    ScenicRealTimeData getRealTimeByScenicId(Long spotId);
+    int insertRealTime(ScenicRealTimeData data);
+    int updateRealTime(ScenicRealTimeData data);
+    List<Long> getScenicIdsWithRealData();
 }

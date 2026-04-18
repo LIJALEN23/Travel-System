@@ -39,14 +39,14 @@ public interface AgencyService {
     int updateRealData(AgencyRealTimeData data);
 
     // ====================== 电子行程单 ======================
-    List<TravelOrder> getOrderByAgency(Long agencyId);
+    List<TravelOrder> getOrderByCondition(Long agencyId, String orderStatus, String teamName, String startTime);
     TravelOrder getOrderById(Long orderId);
     List<TravelOrder> getRunningOrder();
     int addOrder(TravelOrder order);
     int updateOrderStatus(TravelOrder order);
 
     // ====================== 出境游审核 ======================
-    List<AbroadTravel> getAbroadByAgency(Long agencyId);
+    List<AbroadTravel> getAbroadByAgency(Long agencyId, String visaStatus);
     List<AbroadTravel> getWaitAuditAbroad();
     int addAbroad(AbroadTravel abroad);
     int updateVisa(AbroadTravel abroad);

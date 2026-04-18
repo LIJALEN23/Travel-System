@@ -9,7 +9,8 @@ import java.util.Map;
 public interface HotelMapper {
     // 查询所有饭店
     List<HotelBase> selectAllHotel();
-
+    // 根据景区ID查询对应酒店
+    List<HotelBase> selectHotelByScenicId(@Param("scenicId") Long scenicId);
     // 根据ID查询饭店详情
     Map<String, Object> selectHotelDetailById(@Param("hotelId") Long hotelId);
 
@@ -21,10 +22,16 @@ public interface HotelMapper {
 
     // 根据饭店ID查询实时数据
     HotelRealTimeData selectRealDataByHotelId(@Param("hotelId") Long hotelId);
+    // ========== 查询酒店最大容纳量 ==========
+    Integer selectMaxCapacityByHotelId(@Param("hotelId") Long hotelId);
 
     //名字模糊查询、星级和状态筛选
     List<HotelBase> selectHotelByCondition(
             @Param("hotelName") String hotelName,
             @Param("starLevel") Integer starLevel
     );
+    //===========实时数据============
+    int insertRealTimeData(HotelRealTimeData data);
+    int updateRealTimeData(HotelRealTimeData data);
+    List<Long> selectHotelIdsWithRealData();
 }
