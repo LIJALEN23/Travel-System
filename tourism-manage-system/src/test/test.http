@@ -394,16 +394,56 @@ Authorization: Bearer {{token}}
 GET http://localhost:8080/guide/complaint/bad/1
 Authorization: Bearer {{token}}
 
-#====================== 2. 告警信息接口测试 ======================
-### 2.1 查询所有告警信息
+
+# ====================== 新增：景区实时数据接口测试 ======================
+### 1. 上传景区实时数据（青城山 id=1）
+POST http://localhost:8080/spot/realTime/upload
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "spotId": 1,
+  "currentVisitors": 6000,
+  "remainingParking": 200,
+  "cableWaitTime": 45
+}
+
+### 2. 查询单个景区实时数据（id=1 青城山）
+GET http://localhost:8080/spot/realTime?spotId=1
+Accept: application/json
+Authorization: Bearer {{token}}
+
+
+# ====================== 酒店实时数据接口测试 ======================
+### 1. 上传酒店实时数据（青城山酒店 id=1）
+POST http://localhost:8080/hotel/realTime/upload
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "hotelId": 1,
+  "currentVisitors": 700,
+  "remainingParking": 10
+}
+
+### 2. 查询单个酒店实时数据（id=1）
+GET http://localhost:8080/hotel/realTime?hotelId=1
+Accept: application/json
+Authorization: Bearer {{token}}
+#====================== 告警信息接口测试 ======================
+### 2.0 新增：查询每个景区/酒店的最新未处理告警（核心适配去重逻辑）
+GET http://localhost:8080/alert/latest/unprocessed
+Authorization: Bearer {{token}}
+
+### 2.1 查询所有告警信息（原有，保留）
 GET http://localhost:8080/alert/list
 Authorization: Bearer {{token}}
 
-### 2.2 查询单个告警详情（id=1）
-GET http://localhost:8080/alert/get/1
+### 2.2 查询单个告警详情（建议替换为实际存在的id）
+GET http://localhost:8080/alert/get/7
 Authorization: Bearer {{token}}
 
-### 2.3 系统自动检测并生成告警
+### 2.3 系统自动检测并生成告警（原有，优化描述）
 GET http://localhost:8080/alert/autoCheck
 Authorization: Bearer {{token}}
 
@@ -432,49 +472,83 @@ id=1&handleResult=已联系景区处理完毕&handler=王五
 GET http://localhost:8080/alert/handleList/1
 Authorization: Bearer {{token}}
 
-# ====================== 3. 投诉管理接口测试 ======================
-### 3.1 提交投诉
+### 2.8 重复触发自动检测（验证去重逻辑）
+# 连续2次调用autoCheck，验证同一告警不会重复生成，仅更新update_time
+GET http://localhost:8080/alert/autoCheck
+Authorization: Bearer {{token}}
+
+### ====================== 投诉模块接口测试（完整版） ======================
+
+### 1. 提交投诉 —— 等级：一般（扣 5 分）
 POST http://localhost:8080/complaint/submit
 Content-Type: application/json
-Authorization: Bearer {{token}}
 
 {
   "visitorName": "游客张三",
-  "visitorPhone": "13800138000",
+  "visitorPhone": "13800138001",
+  "title": "导游服务态度一般",
   "level": "一般",
-  "content": "导游服务态度差，未按约定讲解景点",
+  "content": "讲解不详细，态度一般",
   "guideId": 1,
-  "agencyId": 1,
-  "status": "待处理"
+  "agencyId": 1
 }
 
-### 3.2 处理投诉（id=1，处理人：管理员，处理结果：已道歉，状态：已办结）
-PUT http://localhost:8080/complaint/handle/1
+### 2. 提交投诉 —— 等级：较重（扣 10 分）
+POST http://localhost:8080/complaint/submit
+Content-Type: application/json
+
+{
+  "visitorName": "游客李四",
+  "visitorPhone": "13800138002",
+  "title": "导游擅自改变行程",
+  "level": "较重",
+  "content": "擅自减少景点，压缩游览时间",
+  "guideId": 2,
+  "agencyId": 2
+}
+
+### 3. 提交投诉 —— 等级：严重（扣 20 分）
+POST http://localhost:8080/complaint/submit
+Content-Type: application/json
+
+{
+  "visitorName": "游客王五",
+  "visitorPhone": "13800138003",
+  "title": "导游强制消费、态度恶劣",
+  "level": "严重",
+  "content": "强制购物，辱骂游客，严重违反规范",
+  "guideId": 2,
+  "agencyId": 2
+}
+
+### 4. 处理投诉（办结）—— 传入对应投诉ID
+POST http://localhost:8080/complaint/handle
 Content-Type: application/x-www-form-urlencoded
 Authorization: Bearer {{token}}
 
-handleUser=管理员&handleResult=已联系游客道歉并补偿，游客满意&status=已办结
+complaintId=6&handleUser=管理员&handleResult=已核实处理&status=已办结
 
-### 3.3 查询所有投诉列表
+
+### 5. 查询所有投诉
 GET http://localhost:8080/complaint/list
 Authorization: Bearer {{token}}
 
-### 3.4 按状态查询投诉（待处理）
-GET http://localhost:8080/complaint/list?status=待处理
+### 6. 按状态查询：已办结
+GET http://localhost:8080/complaint/list?status=已办结
 Authorization: Bearer {{token}}
-
-### 3.5 按旅行社ID查询投诉（agencyId=1）
-GET http://localhost:8080/complaint/list?agencyId=1
+### 9. 按导游查询投诉
+GET http://localhost:8080/complaint/list?guideId=2
 Authorization: Bearer {{token}}
-
-### 3.6 按导游ID查询投诉（guideId=1）
-GET http://localhost:8080/complaint/list?guideId=1
-Authorization: Bearer {{token}}
-
-### 3.7 查询单个投诉详情（id=1）
+### 10. 查询单个投诉
 GET http://localhost:8080/complaint/1
 Authorization: Bearer {{token}}
-
-### 3.8 删除投诉（id=1）
+### 11. 删除投诉
 DELETE http://localhost:8080/complaint/1
+Authorization: Bearer {{token}}
+### ====================== 诚信分模块（实时统计） ======================
+### 12. 查询导游诚信信息（分数 = 100 - 总扣分）
+GET http://localhost:8080/complaint/guide/credit/2
+Authorization: Bearer {{token}}
+### 13. 查询旅行社诚信信息
+GET http://localhost:8080/complaint/agency/credit/2
 Authorization: Bearer {{token}}

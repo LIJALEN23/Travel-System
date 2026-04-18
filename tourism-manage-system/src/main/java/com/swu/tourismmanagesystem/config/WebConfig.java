@@ -26,7 +26,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "/static/**",
                         "/error",
                         "/guide/public/search",      // 游客按姓名查导游
-                        "/complaint/submit"      // 新增：游客提交投诉无需登录
+                        "/complaint/submit"         // 游客提交投诉无需登录
                 );
     }
 }

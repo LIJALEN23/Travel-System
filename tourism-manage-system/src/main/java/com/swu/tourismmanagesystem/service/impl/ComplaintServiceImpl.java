@@ -20,55 +20,57 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * 投诉管理Service实现（最终版：完全适配你的AgencyMapper/GuideMapper）
- */
 @Service
 public class ComplaintServiceImpl implements ComplaintService {
 
     @Autowired
     private ComplaintMapper complaintMapper;
+
     @Autowired
     private AgencyMapper agencyMapper;
+
     @Autowired
     private GuideMapper guideMapper;
 
-    /**
-     * 提交投诉（自动生成投诉单号 + 初始化状态）
-     */
+    // ===================== 提交投诉（只存记录，不计数） =====================
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void submitComplaint(Complaint complaint) {
-        // 1. 自动生成投诉单号（格式：TS + 日期 + 6位随机数）
+        if (complaint.getVisitorName() == null || complaint.getVisitorPhone() == null || complaint.getContent() == null) {
+            throw new RuntimeException("必填字段不能为空");
+        }
+
         String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String randomStr = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
         complaint.setComplaintNo("TS" + dateStr + randomStr);
 
-        // 2. 初始化投诉状态和时间
         complaint.setStatus(ComplaintConstant.STATUS_PENDING);
         complaint.setCreateTime(LocalDateTime.now());
         complaint.setUpdateTime(LocalDateTime.now());
 
-        // 3. 保存投诉记录（调用你的ComplaintMapper）
         complaintMapper.insertComplaint(complaint);
     }
 
-    /**
-     * 处理投诉（核心：更新状态 + 诚信分扣分）
-     */
+    // ===================== 处理投诉（核心：办结 → 统计 → 更新信用） =====================
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void handleComplaint(Long complaintId, String handleUser, String handleResult, String status) {
-        // 1. 查询投诉详情（校验存在性）
         Complaint complaint = complaintMapper.getComplaintById(complaintId);
         if (complaint == null) {
-            throw new RuntimeException("投诉记录不存在！ID：" + complaintId);
-        }
-        if (ComplaintConstant.STATUS_DONE.equals(complaint.getStatus()) || ComplaintConstant.STATUS_REJECT.equals(complaint.getStatus())) {
-            throw new RuntimeException("该投诉已处理完成/驳回，不可重复操作！");
+            throw new RuntimeException("投诉不存在");
         }
 
-        // 2. 更新投诉处理信息
+        // 已处理不能重复操作
+        if (ComplaintConstant.STATUS_DONE.equals(complaint.getStatus()) || ComplaintConstant.STATUS_REJECT.equals(complaint.getStatus())) {
+            throw new RuntimeException("已处理，不可操作");
+        }
+
+        // 驳回自动加提示
+        if (ComplaintConstant.STATUS_REJECT.equals(status)) {
+            handleResult += "（经核查驳回，疑问咨询客服）";
+        }
+
+        // 更新投诉
         complaint.setHandleUser(handleUser);
         complaint.setHandleResult(handleResult);
         complaint.setHandleTime(LocalDateTime.now());
@@ -76,149 +78,174 @@ public class ComplaintServiceImpl implements ComplaintService {
         complaint.setUpdateTime(LocalDateTime.now());
         complaintMapper.updateComplaint(complaint);
 
-        // 3. 仅当“已办结”时执行扣分逻辑
+        // ===================== ✅ 办结 → 重新统计信用（完全靠数据库） =====================
         if (ComplaintConstant.STATUS_DONE.equals(status)) {
-            int deductScore = getDeductScoreByLevel(complaint.getLevel());
-            // 优先处理导游投诉（guideId非空）
+            // 统计并更新导游信用
             if (complaint.getGuideId() != null) {
-                handleGuideComplaint(complaint.getGuideId(), deductScore, complaint.getLevel());
-            } else if (complaint.getAgencyId() != null) {
-                handleAgencyComplaint(complaint.getAgencyId(), deductScore, complaint.getLevel());
-            } else {
-                throw new RuntimeException("投诉对象不能为空（旅行社/导游ID至少填一个）！");
+                calculateAndUpdateGuideCredit(complaint.getGuideId());
+            }
+            // 统计并更新旅行社信用
+            if (complaint.getAgencyId() != null) {
+                calculateAndUpdateAgencyCredit(complaint.getAgencyId());
             }
         }
     }
 
-    /**
-     * 条件查询投诉列表
-     */
+    // ===================== ✅ 核心：导游信用 = 全靠数据库统计 =====================
+    private void calculateAndUpdateGuideCredit(Long guideId) {
+        // 1. 查询该导游【所有已办结投诉】
+        List<Complaint> doneList = complaintMapper.listComplaint(
+                ComplaintConstant.STATUS_DONE, null, guideId);
+
+        // 2. 计算总扣分
+        int totalDeduct = 0;
+        for (Complaint c : doneList) {
+            totalDeduct += getDeductScoreByLevel(c.getLevel());
+        }
+
+        // 3. 最终分数 = 100 - 总扣分（最低0）
+        int finalScore = Math.max(100 - totalDeduct, 0);
+
+        // 4. 查投诉总数、不良数（全靠mapper）
+        int total = complaintMapper.countGuideValidComplaints(guideId);
+        int bad = complaintMapper.countGuideBadComplaints(guideId);
+
+        // 5. 查询或初始化诚信记录
+        GuideCredit credit = guideMapper.getGuideCreditByGuideId(guideId);
+        if (credit == null) {
+            credit = new GuideCredit();
+            credit.setGuideId(guideId);
+            credit.setCreditScore(finalScore);
+            credit.setTotalComplaint(total);
+            credit.setBadComplaint(bad);
+            guideMapper.insertGuideCredit(credit);
+        } else {
+            // ✅ 直接覆盖为最新统计结果
+            credit.setCreditScore(finalScore);
+            credit.setTotalComplaint(total);
+            credit.setBadComplaint(bad);
+            credit.setUpdateTime(LocalDateTime.now());
+            guideMapper.updateGuideCredit(credit);
+        }
+
+        // 6. 冻结/解冻（自动）
+        Guide guide = guideMapper.getGuideById(guideId);
+        if (finalScore < 50) {
+            guide.setWorkStatus(2); // 冻结
+        } else {
+            guide.setWorkStatus(1); // 正常
+        }
+        guideMapper.updateGuide(guide);
+    }
+
+    // ===================== ✅ 核心：旅行社信用 = 全靠数据库统计 =====================
+    private void calculateAndUpdateAgencyCredit(Long agencyId) {
+        // 1. 查所有已办结投诉
+        List<Complaint> doneList = complaintMapper.listComplaint(
+                ComplaintConstant.STATUS_DONE, agencyId, null);
+
+        // 2. 算总扣分
+        int totalDeduct = 0;
+        for (Complaint c : doneList) {
+            totalDeduct += getDeductScoreByLevel(c.getLevel());
+        }
+
+        // 3. 最终分数
+        int finalScore = Math.max(100 - totalDeduct, 0);
+
+        // 4. 查最新数量
+        int total = complaintMapper.countAgencyValidComplaints(agencyId);
+        int bad = complaintMapper.countAgencyBadComplaints(agencyId);
+
+        // 5. 更新信用
+        AgencyCredit credit = agencyMapper.getAgencyCreditByAgencyId(agencyId);
+        if (credit == null) {
+            credit = new AgencyCredit();
+            credit.setAgencyId(agencyId);
+            credit.setCreditScore(finalScore);
+            credit.setTotalComplaint(total);
+            credit.setBadComplaint(bad);
+            agencyMapper.insertAgencyCredit(credit);
+        } else {
+            credit.setCreditScore(finalScore);
+            credit.setTotalComplaint(total);
+            credit.setBadComplaint(bad);
+            credit.setUpdateTime(LocalDateTime.now());
+            agencyMapper.updateAgencyCredit(credit);
+        }
+
+        // 6. 更新等级
+        TravelAgency agency = agencyMapper.getTravelAgencyById(agencyId);
+        agency.setCreditLevel(CreditLevelUtil.getLevelByScore(finalScore));
+        agencyMapper.updateTravelAgency(agency);
+    }
+
+    // ===================== 删除投诉（自动重新统计 → 自动恢复分数） =====================
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteComplaint(Long id) {
+        Complaint complaint = complaintMapper.getComplaintById(id);
+        if (complaint == null) throw new RuntimeException("投诉不存在");
+
+        // 删除投诉
+        complaintMapper.deleteComplaint(id);
+
+        // ✅ 删除后 → 重新统计 → 自动恢复分数
+        if (complaint.getGuideId() != null) {
+            calculateAndUpdateGuideCredit(complaint.getGuideId());
+        }
+        if (complaint.getAgencyId() != null) {
+            calculateAndUpdateAgencyCredit(complaint.getAgencyId());
+        }
+    }
+
+    // ===================== 工具方法 =====================
+    private int getDeductScoreByLevel(String level) {
+        int score;
+        switch (level) {
+            case ComplaintConstant.COMPLAINT_LEVEL_NORMAL: score = 5; break;
+            case ComplaintConstant.COMPLAINT_LEVEL_HEAVY: score = 10; break;
+            case ComplaintConstant.COMPLAINT_LEVEL_SERIOUS: score = 20; break;
+            default: throw new RuntimeException("等级错误");
+        }
+        return score;
+    }
+
     @Override
     public List<Complaint> listComplaints(String status, Long agencyId, Long guideId) {
         return complaintMapper.listComplaint(status, agencyId, guideId);
     }
 
-    /**
-     * 查询单个投诉详情
-     */
     @Override
     public Complaint getComplaintById(Long id) {
         return complaintMapper.getComplaintById(id);
     }
-
-    // ------------------------ 私有核心方法 ------------------------
-    /**
-     * 根据投诉等级计算扣分（适配level字段：一般/较重/严重）
-     */
-    private int getDeductScoreByLevel(String level) {
-        int deductScore;
-        switch (level) {
-            case ComplaintConstant.COMPLAINT_LEVEL_NORMAL:
-                deductScore = 5;
-                break;
-            case ComplaintConstant.COMPLAINT_LEVEL_HEAVY:
-                deductScore = 10;
-                break;
-            case ComplaintConstant.COMPLAINT_LEVEL_SERIOUS:
-                deductScore = 20;
-                break;
-            default:
-                throw new RuntimeException("无效的投诉等级：" + level);
-        }
-        return deductScore;
-    }
-
-    /**
-     * 处理旅行社投诉（调用AgencyMapper）
-     */
-    private void handleAgencyComplaint(Long agencyId, int deductScore, String complaintLevel) {
-        TravelAgency agency = agencyMapper.getTravelAgencyById(agencyId);
-        if (agency == null) {
-            throw new RuntimeException("旅行社不存在！ID：" + agencyId);
-        }
-
-        AgencyCredit agencyCredit = agencyMapper.getAgencyCreditByAgencyId(agencyId);
-        if (agencyCredit == null) {
-            agencyCredit = new AgencyCredit();
-            agencyCredit.setAgencyId(agencyId);
-            agencyCredit.setCreditScore(ComplaintConstant.INIT_CREDIT_SCORE);
-            agencyCredit.setTotalComplaint(0);
-            agencyCredit.setBadComplaint(0);
-            agencyMapper.insertAgencyCredit(agencyCredit);
-        }
-
-        int newScore = Math.max(agencyCredit.getCreditScore() - deductScore, 0);
-        agencyCredit.setCreditScore(newScore);
-        agencyCredit.setTotalComplaint(agencyCredit.getTotalComplaint() + 1);
-        if (ComplaintConstant.COMPLAINT_LEVEL_HEAVY.equals(complaintLevel)
-                || ComplaintConstant.COMPLAINT_LEVEL_SERIOUS.equals(complaintLevel)) {
-            agencyCredit.setBadComplaint(agencyCredit.getBadComplaint() + 1);
-        }
-        agencyCredit.setUpdateTime(LocalDateTime.now());
-        agencyMapper.updateAgencyCredit(agencyCredit);
-
-
-        String newLevel = CreditLevelUtil.getLevelByScore(newScore);
-        agency.setCreditLevel(newLevel);
-        agency.setUpdateTime(LocalDateTime.now());
-        agencyMapper.updateTravelAgency(agency);
-    }
-
-    /**
-     * 处理导游投诉（调用GuideMapper）
-     */
-    private void handleGuideComplaint(Long guideId, int deductScore, String complaintLevel) {
-        // 1. 查询导游信息（调用GuideMapper.getGuideById）
-        Guide guide = guideMapper.getGuideById(guideId);
-        if (guide == null) {
-            throw new RuntimeException("导游不存在！ID：" + guideId);
-        }
-
-        // 2. 查询/初始化导游诚信档案（调用GuideMapper）
-        GuideCredit guideCredit = guideMapper.getGuideCreditByGuideId(guideId);
-        if (guideCredit == null) {
-            guideCredit = new GuideCredit();
-            guideCredit.setGuideId(guideId);
-            guideCredit.setCreditScore(ComplaintConstant.INIT_CREDIT_SCORE);
-            guideCredit.setTotalComplaint(0);
-            guideCredit.setBadComplaint(0);
-            guideMapper.insertGuideCredit(guideCredit);
-        }
-
-        // 3. 更新诚信分（最低扣至0分）
-        int newScore = Math.max(guideCredit.getCreditScore() - deductScore, 0);
-        guideCredit.setCreditScore(newScore);
-
-        // 4. 更新投诉统计
-        guideCredit.setTotalComplaint(guideCredit.getTotalComplaint() + 1);
-        if (ComplaintConstant.COMPLAINT_LEVEL_HEAVY.equals(complaintLevel)
-                || ComplaintConstant.COMPLAINT_LEVEL_SERIOUS.equals(complaintLevel)) {
-            guideCredit.setBadComplaint(guideCredit.getBadComplaint() + 1);
-        }
-        guideCredit.setUpdateTime(LocalDateTime.now());
-        guideMapper.updateGuideCredit(guideCredit);
-
-        // 5. 自动冻结导游（分数<50时更新workStatus=2）
-        if (newScore < 50) {
-            guide.setWorkStatus(ComplaintConstant.GUIDE_STATUS_FREEZE);
-            guide.setUpdateTime(LocalDateTime.now());
-            guideMapper.updateGuide(guide);
-        }
-    }
+    // ===================== 新增：查询导游诚信信息 =====================
     @Override
-    public void deleteComplaint(Long id) {
-        // 1. 校验投诉是否存在
-        if (id == null || id <= 0) {
-            throw new RuntimeException("投诉ID不能为空且必须为正数");
+    public GuideCredit getGuideCredit(Long guideId) {
+        GuideCredit credit = guideMapper.getGuideCreditByGuideId(guideId);
+        if (credit == null) {
+            // 没有投诉过就返回默认信用
+            credit = new GuideCredit();
+            credit.setGuideId(guideId);
+            credit.setCreditScore(100);
+            credit.setTotalComplaint(0);
+            credit.setBadComplaint(0);
         }
-        Complaint complaint = complaintMapper.getComplaintById(id);
-        if (complaint == null) {
-            throw new RuntimeException("投诉不存在，无法删除");
+        return credit;
+    }
+
+    // ===================== 新增：查询旅行社诚信信息 =====================
+    @Override
+    public AgencyCredit getAgencyCredit(Long agencyId) {
+        AgencyCredit credit = agencyMapper.getAgencyCreditByAgencyId(agencyId);
+        if (credit == null) {
+            credit = new AgencyCredit();
+            credit.setAgencyId(agencyId);
+            credit.setCreditScore(100);
+            credit.setTotalComplaint(0);
+            credit.setBadComplaint(0);
         }
-        // 2. 执行删除
-        int rows = complaintMapper.deleteComplaint(id);
-        if (rows <= 0) {
-            throw new RuntimeException("投诉删除失败");
-        }
+        return credit;
     }
 }

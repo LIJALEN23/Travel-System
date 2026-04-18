@@ -305,7 +305,6 @@
         <result column="agency_id" property="agencyId"/>
         <result column="credit_score" property="creditScore"/>
         <result column="total_complaint" property="totalComplaint"/>
-        <result column="normal_complaint" property="normalComplaint"/>
         <result column="bad_complaint" property="badComplaint"/>
         <result column="credit_desc" property="creditDesc"/>
         <result column="update_time" property="updateTime"/>
@@ -318,8 +317,8 @@
 
     <!-- 新增诚信档案 -->
     <insert id="insertAgencyCredit">
-        insert into agency_credit(agency_id, credit_score, total_complaint, normal_complaint, bad_complaint, credit_desc)
-        values(#{agencyId}, #{creditScore}, #{totalComplaint}, #{normalComplaint}, #{badComplaint}, #{creditDesc})
+        insert into agency_credit(agency_id, credit_score, total_complaint,  bad_complaint, credit_desc)
+        values(#{agencyId}, #{creditScore}, #{totalComplaint},  #{badComplaint}, #{creditDesc})
     </insert>
 
     <!-- 更新诚信分数、投诉统计 -->
@@ -328,7 +327,6 @@
         <set>
             <if test="creditScore != null">credit_score = #{creditScore},</if>
             <if test="totalComplaint != null">total_complaint = #{totalComplaint},</if>
-            <if test="normalComplaint != null">normal_complaint = #{normalComplaint},</if>
             <if test="badComplaint != null">bad_complaint = #{badComplaint},</if>
             <if test="creditDesc != null">credit_desc = #{creditDesc},</if>
             update_time = now()

@@ -2,7 +2,8 @@ package com.swu.tourismmanagesystem.service;
 
 import com.swu.tourismmanagesystem.entity.complaint.Complaint;
 import java.util.List;
-
+import com.swu.tourismmanagesystem.entity.agency.AgencyCredit;
+import com.swu.tourismmanagesystem.entity.guide.GuideCredit;
 /**
  * 投诉管理Service（完全适配你的Complaint实体）
  */
@@ -28,4 +29,6 @@ public interface ComplaintService {
      */
     Complaint getComplaintById(Long id);
     void deleteComplaint(Long id);
+    GuideCredit getGuideCredit(Long guideId);
+    AgencyCredit getAgencyCredit(Long agencyId);
 }

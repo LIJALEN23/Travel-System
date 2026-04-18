@@ -9,7 +9,10 @@ public interface AlertService {
     void autoCheckAndGenerateMessage();
     // 生成提示/告警信息
     int createMessage(AlertMessage message);
-
+    /**
+     * 查询每个景区/酒店的最新未处理告警
+     */
+    List<AlertMessage> getLatestUnprocessedAlerts();
     // 根据ID查询
     AlertMessage getMessageById(Long id);
 

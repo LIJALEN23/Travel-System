@@ -9,11 +9,11 @@ public class GuideCredit {
 
     private Integer creditScore;    // 诚信分
     private Integer totalComplaint; // 总投诉
-    private Integer badComplaint;   // 严重投诉
+    private Integer badComplaint;   // 严重投诉数
 
     private String creditDesc;      // 评价
     private LocalDateTime updateTime;
 
-    // 新增：计算得出的诚信等级，不对应数据库字段
+    // 计算得出的诚信等级，不对应数据库字段
     private String creditLevel;
 }

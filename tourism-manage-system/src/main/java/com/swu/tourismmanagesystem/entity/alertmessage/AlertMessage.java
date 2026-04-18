@@ -22,7 +22,7 @@ public class AlertMessage {
 
     // 审批领导
     private String leader;
-
+    private String extInfo;     // 存储SCENE_1/HOTEL_1等唯一标识
     // 创建时间 & 更新时间
     private LocalDateTime createTime;
     private LocalDateTime updateTime;

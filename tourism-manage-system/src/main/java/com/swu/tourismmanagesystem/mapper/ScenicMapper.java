@@ -23,6 +23,9 @@ public interface ScenicMapper {
     int insertEmergency(ScenicEmergency emergency);
 
     //============实时数据=========
-    ScenicRealTimeData selectRealDataBySpotId(Long spotId);
-    int updateRealData(ScenicRealTimeData data);
+    ScenicRealTimeData getRealTimeByScenicId(Long spotId);
+    int insertRealTime(ScenicRealTimeData data);
+    int updateRealTime(ScenicRealTimeData data);
+
+    List<Long> selectScenicIdsWithRealData();
 }

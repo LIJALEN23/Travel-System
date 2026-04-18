@@ -1,14 +1,12 @@
 package com.swu.tourismmanagesystem.controller;
 
-import com.swu.tourismmanagesystem.entity.hotel.HotelBase;
+import com.swu.tourismmanagesystem.entity.hotel.*;
 import com.swu.tourismmanagesystem.service.HotelService;
 import com.swu.tourismmanagesystem.utils.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
 
 import java.util.List;
 import java.util.Map;
@@ -98,5 +96,27 @@ public class HotelController {
                 .collect(Collectors.toList());
 
         return Result.success("获取酒店名称成功", names);
+    }
+    @PostMapping("/realTime/upload")
+    public Result uploadRealTime(@RequestBody HotelRealTimeData data) {
+        if (data.getHotelId() == null) {
+            return Result.error("酒店ID不能为空");
+        }
+        if (data.getCurrentVisitors() == null) { // 新增：校验当前游客数
+            return Result.error("当前游客数不能为空");
+        }
+        try {
+            hotelService.saveOrUpdateRealTime(data);
+            return Result.success("实时数据上传成功", null);
+        } catch (Exception e) {
+            return Result.error("上传失败：" + e.getMessage());
+        }
+    }
+
+    // ===================== 查询酒店实时数据 =====================
+    @GetMapping("/realTime")
+    public Result getRealTime(@RequestParam Long hotelId) {
+        HotelRealTimeData data = hotelService.getRealTimeByHotelId(hotelId);
+        return Result.success("获取实时数据成功", data);
     }
 }

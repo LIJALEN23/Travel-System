@@ -1,6 +1,6 @@
 package com.swu.tourismmanagesystem.service;
 
-import com.swu.tourismmanagesystem.entity.hotel.HotelBase;
+import com.swu.tourismmanagesystem.entity.hotel.*;
 import java.util.List;
 import java.util.Map;
 
@@ -19,4 +19,9 @@ public interface HotelService {
 
     // 获取酒店名称列表
     List<String> getHotelNameList(List<HotelBase> allHotel);
+    //===========实时数据========
+    // ===================== 酒店实时数据 =====================
+    HotelRealTimeData getRealTimeByHotelId(Long hotelId);
+    void saveOrUpdateRealTime(HotelRealTimeData data);
+    List<Long> getHotelIdsWithRealData();
 }

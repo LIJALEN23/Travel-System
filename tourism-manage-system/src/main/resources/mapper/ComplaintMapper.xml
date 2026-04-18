@@ -73,5 +73,48 @@
     <delete id="deleteComplaint">
         DELETE FROM complaint WHERE id = #{id}
     </delete>
+    <!-- ===================== 新增：投诉数统计方法（核心） ===================== -->
+    <!-- 1. 统计旅行社有效投诉数（排除驳回状态） -->
+    <select id="countAgencyValidComplaints" resultType="int">
+        SELECT COUNT(*) FROM complaint
+        WHERE agency_id = #{agencyId}
+          AND status != '驳回'
+    </select>
 
+    <!-- 2. 统计旅行社不良投诉数（已办结 + 较重/严重等级） -->
+    <select id="countAgencyBadComplaints" resultType="int">
+        SELECT COUNT(*) FROM complaint
+        WHERE agency_id = #{agencyId}
+          AND status = '已办结'
+          AND level IN ('较重', '严重')
+    </select>
+
+    <!-- 3. 统计导游有效投诉数（排除驳回状态） -->
+    <select id="countGuideValidComplaints" resultType="int">
+        SELECT COUNT(*) FROM complaint
+        WHERE guide_id = #{guideId}
+          AND status != '驳回'
+    </select>
+
+    <!-- 4. 统计导游不良投诉数（已办结 + 较重/严重等级） -->
+    <select id="countGuideBadComplaints" resultType="int">
+        SELECT COUNT(*) FROM complaint
+        WHERE guide_id = #{guideId}
+          AND status = '已办结'
+          AND level IN ('较重', '严重')
+    </select>
+
+    <!-- 5. （可选）统计旅行社指定状态的投诉数（灵活扩展） -->
+    <select id="countAgencyComplaintsByStatus" resultType="int">
+        SELECT COUNT(*) FROM complaint
+        WHERE agency_id = #{agencyId}
+          AND status = #{status}
+    </select>
+
+    <!-- 6. （可选）统计导游指定状态的投诉数（灵活扩展） -->
+    <select id="countGuideComplaintsByStatus" resultType="int">
+        SELECT COUNT(*) FROM complaint
+        WHERE guide_id = #{guideId}
+          AND status = #{status}
+    </select>
 </mapper>

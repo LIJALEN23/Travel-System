@@ -1,161 +1,107 @@
 package com.swu.tourismmanagesystem.controller;
 
+import com.swu.tourismmanagesystem.utils.Result;
 import com.swu.tourismmanagesystem.entity.complaint.Complaint;
 import com.swu.tourismmanagesystem.service.ComplaintService;
-import com.swu.tourismmanagesystem.utils.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
-/**
- * 投诉管理控制器
- * 接口前缀：/api/complaint
- * 适配全局跨域配置 + 自定义Result工具类 + 登录拦截器规则
- */
 @RestController
 @RequestMapping("/complaint")
 public class ComplaintController {
 
-    // 注入投诉服务（确保Spring已扫描并注册ComplaintService Bean）
     @Autowired
     private ComplaintService complaintService;
 
-    /**
-     * 提交投诉（游客/用户提交投诉，自动生成投诉单号）
-     * 请求方式：POST
-     * 请求地址：/api/complaint/submit
-     * 请求体：Complaint实体JSON（visitorName/visitorPhone/level/content为必填）
-     * 返回值：统一响应结果（包含投诉单号）
-     */
+    // ================================
+    // 1. 提交投诉
+    // ================================
     @PostMapping("/submit")
     public Result submitComplaint(@RequestBody Complaint complaint) {
         try {
-            // 基础参数校验（避免空值提交）
-            if (complaint.getVisitorName() == null || complaint.getVisitorName().trim().isEmpty()) {
-                return Result.error("游客姓名不能为空");
-            }
-            if (complaint.getVisitorPhone() == null || complaint.getVisitorPhone().trim().isEmpty()) {
-                return Result.error("游客联系电话不能为空");
-            }
-            if (complaint.getContent() == null || complaint.getContent().trim().isEmpty()) {
-                return Result.error("投诉内容不能为空");
-            }
-            if (complaint.getLevel() == null || complaint.getLevel().trim().isEmpty()) {
-                return Result.error("投诉等级不能为空（一般/较重/严重）");
-            }
-
-            // 调用Service提交投诉（自动生成单号+初始化状态）
             complaintService.submitComplaint(complaint);
-
-            // 返回成功结果（包含投诉单号）
-            return Result.success("投诉提交成功", complaint.getComplaintNo());
+            return Result.success("投诉提交成功", null);
         } catch (Exception e) {
-            // 捕获异常并返回友好提示
-            return Result.error("投诉提交失败：" + e.getMessage());
+            return Result.error("提交失败：" + e.getMessage());
         }
     }
 
-    /**
-     * 处理投诉（管理员操作：更新状态+扣诚信分）
-     * 请求方式：PUT
-     * 请求地址：/api/complaint/handle/{id}
-     * 路径参数：id - 投诉ID
-     * 请求参数：handleUser（处理人）、handleResult（处理结果）、status（处理状态：已办结/驳回）
-     * 返回值：统一响应结果
-     */
-    @PutMapping("/handle/{id}")
+    // ================================
+    // 2. 处理投诉（办结/驳回）
+    // ================================
+    @PostMapping("/handle")
     public Result handleComplaint(
-            @PathVariable("id") Long complaintId,
+            @RequestParam Long complaintId,
             @RequestParam String handleUser,
             @RequestParam String handleResult,
             @RequestParam String status) {
+
         try {
-            // 参数校验
-            if (complaintId == null || complaintId <= 0) {
-                return Result.error("投诉ID必须为正整数");
-            }
-            if (handleUser == null || handleUser.trim().isEmpty()) {
-                return Result.error("处理人不能为空");
-            }
-            if (handleResult == null || handleResult.trim().isEmpty()) {
-                return Result.error("处理结果不能为空");
-            }
-            if (status == null || status.trim().isEmpty()) {
-                return Result.error("处理状态不能为空（已办结/驳回）");
-            }
-
-            // 调用Service处理投诉
             complaintService.handleComplaint(complaintId, handleUser, handleResult, status);
-
             return Result.success("投诉处理成功", null);
         } catch (Exception e) {
-            return Result.error("投诉处理失败：" + e.getMessage());
+            return Result.error("处理失败：" + e.getMessage());
         }
     }
 
-    /**
-     * 条件查询投诉列表
-     * 请求方式：GET
-     * 请求地址：/api/complaint/list
-     * 请求参数：status（可选）、agencyId（可选）、guideId（可选）
-     * 返回值：投诉列表数据
-     */
+    // ================================
+    // 3. 删除投诉
+    // ================================
+    @DeleteMapping("/{id}")
+    public Result deleteComplaint(@PathVariable Long id) {
+        try {
+            complaintService.deleteComplaint(id);
+            return Result.success("删除成功", null);
+        } catch (Exception e) {
+            return Result.error("删除失败：" + e.getMessage());
+        }
+    }
+
+    // ================================
+    // 4. 投诉列表（多条件）
+    // ================================
     @GetMapping("/list")
     public Result listComplaints(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long agencyId,
             @RequestParam(required = false) Long guideId) {
-        try {
-            // 调用Service查询列表（参数为空时查询所有）
-            List<Complaint> complaintList = complaintService.listComplaints(status, agencyId, guideId);
 
-            return Result.success("查询投诉列表成功", complaintList);
-        } catch (Exception e) {
-            return Result.error("查询投诉列表失败：" + e.getMessage());
-        }
+        return Result.success("查询成功", complaintService.listComplaints(status, agencyId, guideId));
     }
 
-    /**
-     * 根据ID查询投诉详情
-     * 请求方式：GET
-     * 请求地址：/api/complaint/{id}
-     * 路径参数：id - 投诉ID
-     * 返回值：单个投诉详情
-     */
+    // ================================
+    // 5. 查询单个投诉
+    // ================================
     @GetMapping("/{id}")
-    public Result getComplaintById(@PathVariable Long id) {
+    public Result getComplaint(@PathVariable Long id) {
+        Complaint complaint = complaintService.getComplaintById(id);
+        if (complaint == null) {
+            return Result.error("投诉不存在");
+        }
+        return Result.success("查询成功", complaint);
+    }
+
+    // ================================
+    // 6. 查询导游诚信信息
+    // ================================
+    @GetMapping("/guide/credit/{guideId}")
+    public Result getGuideCredit(@PathVariable Long guideId) {
         try {
-            // 参数校验
-            if (id == null || id <= 0) {
-                return Result.error("投诉ID必须为正整数");
-            }
-
-            // 调用Service查询详情
-            Complaint complaint = complaintService.getComplaintById(id);
-
-            return Result.success("查询投诉详情成功", complaint);
+            return Result.success("查询成功", complaintService.getGuideCredit(guideId));
         } catch (Exception e) {
-            return Result.error("查询投诉详情失败：" + e.getMessage());
+            return Result.error("查询失败：" + e.getMessage());
         }
     }
 
-    /**
-     * 删除投诉（物理删除）
-     * 请求方式：DELETE
-     * 请求地址：/api/complaint/{id}
-     * 路径参数：id - 投诉ID
-     * 返回值：统一响应结果
-     */
-    @DeleteMapping("/{id}")
-    public Result deleteComplaint(@PathVariable Long id) {
+    // ================================
+    // 7. 查询旅行社诚信信息
+    // ================================
+    @GetMapping("/agency/credit/{agencyId}")
+    public Result getAgencyCredit(@PathVariable Long agencyId) {
         try {
-            // 调用Service删除投诉
-            complaintService.deleteComplaint(id);
-
-            return Result.success("投诉删除成功", null);
+            return Result.success("查询成功", complaintService.getAgencyCredit(agencyId));
         } catch (Exception e) {
-            return Result.error("投诉删除失败：" + e.getMessage());
+            return Result.error("查询失败：" + e.getMessage());
         }
     }
 }

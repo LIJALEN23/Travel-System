@@ -26,4 +26,5 @@ public class ComplaintConstant {
 
     // 导游执业状态（对应你的Guide实体workStatus字段：2=冻结）
     public static final int GUIDE_STATUS_FREEZE = 2;
+    public static final int GUIDE_STATUS_NORMAL = 0;
 }

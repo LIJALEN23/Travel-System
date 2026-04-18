@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.Map;
-
+import java.util.List;
 @RestController
 @RequestMapping("/alert")
 public class AlertController {
@@ -16,19 +16,26 @@ public class AlertController {
     @Resource
     private AlertService alertService;
 
-    // ========================== 1. 查询所有告警/提示 ==========================
+    // ========================== 查询所有告警/提示 ==========================
     @GetMapping("/list")
     public Result list() {
         return Result.success("查询成功", alertService.getMessageList());
     }
 
-    // ========================== 2. 根据ID查看详情 ==========================
+    // ==========================  查询每个景区/酒店的最新未处理告警（核心适配） ==========================
+    @GetMapping("/latest/unprocessed")
+    public Result getLatestUnprocessedAlerts() {
+        List<AlertMessage> alerts = alertService.getLatestUnprocessedAlerts();
+        return Result.success("查询最新未处理告警成功", alerts);
+    }
+
+    // ==========================根据ID查看详情 ==========================
     @GetMapping("/get/{id}")
     public Result getById(@PathVariable Long id) {
         return Result.success("查询成功", alertService.getMessageById(id));
     }
 
-    // ========================== 3. 系统自动生成告警/提示（内部调用） ==========================
+    // ========================== 系统自动生成告警/提示（内部调用） ==========================
     @GetMapping("/autoCheck")
     public Map<String, Object> autoCheck() {
         Map<String, Object> result = new HashMap<>();
@@ -43,7 +50,7 @@ public class AlertController {
         return result;
     }
 
-    // ========================== 4. 值班员审核通过 → 改为待发布 ==========================
+    // ========================== 值班员审核通过 → 改为待发布 ==========================
     @PostMapping("/checkPass")
     public Result checkPass(@RequestParam Long id,
                             @RequestParam String operator) {
@@ -51,7 +58,7 @@ public class AlertController {
         return rows > 0 ? Result.success("审核通过，待领导审批发布", null) : Result.error("审核失败");
     }
 
-    // ========================== 5. 领导审批并发布 ==========================
+    // ========================== 领导审批并发布 ==========================
     @PostMapping("/publish")
     public Result publish(@RequestParam Long id,
                           @RequestParam String leader) {
@@ -59,7 +66,7 @@ public class AlertController {
         return rows > 0 ? Result.success("已发布至信息发布系统", null) : Result.error("发布失败");
     }
 
-    // ========================== 6. 无需发布 → 直接处置并登记 ==========================
+    // ==========================  无需发布 → 直接处置并登记 ==========================
     @PostMapping("/handle")
     public Result handle(@RequestParam Long id,
                          @RequestParam String handleResult,
@@ -68,7 +75,7 @@ public class AlertController {
         return rows > 0 ? Result.success("处置完成，已登记备查", null) : Result.error("处置失败");
     }
 
-    // ========================== 7. 查询处置记录 ==========================
+    // ========================== 查询处置记录 ==========================
     @GetMapping("/handleList/{alertId}")
     public Result handleList(@PathVariable Long alertId) {
         return Result.success("查询成功", alertService.getHandleList(alertId));

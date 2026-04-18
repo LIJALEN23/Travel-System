@@ -29,12 +29,10 @@
     <select id="selectEmergencyByHotelId" resultType="com.swu.tourismmanagesystem.entity.hotel.HotelEmergency">
         SELECT * FROM hotel_emergency WHERE hotel_id = #{hotelId}
     </select>
-
-    <!-- 5. 查询实时数据（入住率、剩余车位等） -->
-    <select id="selectRealDataByHotelId" resultType="com.swu.tourismmanagesystem.entity.hotel.HotelRealTimeData">
-        SELECT * FROM hotel_real_time_data WHERE hotel_id = #{hotelId}
+    <!-- ========== 查询酒店最大容纳量 ========== -->
+    <select id="selectMaxCapacityByHotelId" resultType="java.lang.Integer">
+        SELECT max_capacity FROM hotel_base WHERE id = #{hotelId}
     </select>
-
     <!-- ==================== 组合条件查询（模糊+星级+开业） ==================== -->
     <select id="selectHotelByCondition" resultType="com.swu.tourismmanagesystem.entity.hotel.HotelBase">
         SELECT * FROM hotel_base
@@ -47,6 +45,38 @@
         <if test="starLevel != null">
             AND star_level = #{starLevel}
         </if>
+    </select>
+    <!-- ====================== 酒店实时数据 ====================== -->
+    <resultMap id="hotelRealTimeMap" type="com.swu.tourismmanagesystem.entity.hotel.HotelRealTimeData">
+        <id column="id" property="id"/>
+        <result column="hotel_id" property="hotelId"/>
+        <result column="current_visitors" property="currentVisitors"/>
+        <result column="remaining_parking" property="remainingParking"/>
+        <result column="occupancy_rate" property="occupancyRate"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="selectRealDataByHotelId" resultMap="hotelRealTimeMap">
+        select * from hotel_real_time_data where hotel_id = #{hotelId}
+    </select>
+
+    <insert id="insertRealTimeData">
+        insert into hotel_real_time_data(hotel_id, current_visitors, remaining_parking, occupancy_rate, update_time)
+        values(#{hotelId}, #{currentVisitors}, #{remainingParking}, #{occupancyRate}, NOW())
+    </insert>
+
+    <update id="updateRealTimeData">
+        update hotel_real_time_data
+        set current_visitors = #{currentVisitors},
+        remaining_parking = #{remainingParking},
+        occupancy_rate = #{occupancyRate}
+        where hotel_id = #{hotelId}
+    </update>
+    <!--返回所有带有实时数据的酒店id-->
+    <select id="selectHotelIdsWithRealData" resultType="java.lang.Long">
+        SELECT DISTINCT hotel_id
+        FROM hotel_real_time_data
+        WHERE hotel_id IS NOT NULL
     </select>
 </mapper>
 

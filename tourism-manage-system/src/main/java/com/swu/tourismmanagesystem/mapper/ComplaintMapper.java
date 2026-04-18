@@ -25,4 +25,28 @@ public interface ComplaintMapper {
 
     // 删除投诉
     int deleteComplaint(Long id);
+    // ------------------------ 统一投诉数统计方法 ------------------------
+    // 1. 统计旅行社有效投诉数（排除驳回状态）
+    int countAgencyValidComplaints(@Param("agencyId") Long agencyId);
+
+    // 2. 统计旅行社不良投诉数（已办结 + 较重/严重等级）
+    int countAgencyBadComplaints(@Param("agencyId") Long agencyId);
+
+    // 3. 统计导游有效投诉数（排除驳回状态）
+    int countGuideValidComplaints(@Param("guideId") Long guideId);
+
+    // 4. 统计导游不良投诉数（已办结 + 较重/严重等级）
+    int countGuideBadComplaints(@Param("guideId") Long guideId);
+
+    // 5. 统计旅行社指定状态的投诉数（灵活扩展）
+    int countAgencyComplaintsByStatus(
+            @Param("agencyId") Long agencyId,
+            @Param("status") String status
+    );
+
+    // 6. 统计导游指定状态的投诉数（灵活扩展）
+    int countGuideComplaintsByStatus(
+            @Param("guideId") Long guideId,
+            @Param("status") String status
+    );
 }

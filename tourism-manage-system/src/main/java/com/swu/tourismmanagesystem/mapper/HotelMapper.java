@@ -22,10 +22,16 @@ public interface HotelMapper {
 
     // 根据饭店ID查询实时数据
     HotelRealTimeData selectRealDataByHotelId(@Param("hotelId") Long hotelId);
+    // ========== 查询酒店最大容纳量 ==========
+    Integer selectMaxCapacityByHotelId(@Param("hotelId") Long hotelId);
 
     //名字模糊查询、星级和状态筛选
     List<HotelBase> selectHotelByCondition(
             @Param("hotelName") String hotelName,
             @Param("starLevel") Integer starLevel
     );
+    //===========实时数据============
+    int insertRealTimeData(HotelRealTimeData data);
+    int updateRealTimeData(HotelRealTimeData data);
+    List<Long> selectHotelIdsWithRealData();
 }
