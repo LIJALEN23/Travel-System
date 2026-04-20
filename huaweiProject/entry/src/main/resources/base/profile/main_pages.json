@@ -1,6 +1,7 @@
 {
   "src": [
     "pages/Login",
+    "pages/Register",
     "pages/Home",
     "pages/Scenic",
     "pages/Hotel",
@@ -9,6 +10,8 @@
     "pages/Alert",
     "pages/Complaint",
     "pages/Credit",
-    "pages/System"
+    "pages/System",
+    "pages/ScenicDetailPage",
+    "pages/HotelDetailPage"
   ]
 }
