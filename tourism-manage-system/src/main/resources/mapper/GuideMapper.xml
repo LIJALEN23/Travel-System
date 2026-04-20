@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.swu.tourismmanagesystem.mapper.GuideMapper">
+
+    <!-- ====================== 1. 导游基础信息 ====================== -->
+    <resultMap id="guideMap" type="com.swu.tourismmanagesystem.entity.guide.Guide">
+        <id column="id" property="id"/>
+        <result column="agency_id" property="agencyId"/>
+        <result column="name" property="name"/>
+        <result column="gender" property="gender"/>
+        <result column="age" property="age"/>
+        <result column="id_card" property="idCard"/>
+        <result column="phone" property="phone"/>
+        <result column="guide_level" property="guideLevel"/>
+        <result column="work_status" property="workStatus"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <insert id="insertGuide">
+        insert into guide(agency_id, name, gender, age, id_card, phone, guide_level, work_status)
+        values(#{agencyId}, #{name}, #{gender}, #{age}, #{idCard}, #{phone}, #{guideLevel}, #{workStatus})
+    </insert>
+
+    <update id="updateGuide">
+        update guide
+        <set>
+            <if test="agencyId != null">agency_id=#{agencyId},</if>
+            <if test="name != null">name=#{name},</if>
+            <if test="gender != null">gender=#{gender},</if>
+            <if test="age != null">age=#{age},</if>
+            <if test="idCard != null">id_card=#{idCard},</if>
+            <if test="phone != null">phone=#{phone},</if>
+            <if test="guideLevel != null">guide_level=#{guideLevel},</if>
+            <if test="workStatus != null">work_status=#{workStatus},</if>
+            update_time=now()
+        </set>
+        where id=#{id}
+    </update>
+
+    <delete id="deleteGuide">
+        delete from guide where id=#{id}
+    </delete>
+
+    <select id="getGuideById" resultMap="guideMap">
+        select * from guide where id=#{id}
+    </select>
+
+    <select id="listGuides" resultMap="guideMap">
+        select * from guide
+    </select>
+
+    <!-- 姓名/电话/身份证 模糊查询（匹配数据库name字段） -->
+    <select id="listGuidesByLike" resultMap="guideMap">
+        select * from guide
+        <where>
+            <if test="name != null and name != ''">
+                and name like concat('%', #{name}, '%')
+            </if>
+            <if test="phone != null and phone != ''">
+                and phone like concat('%', #{phone}, '%')
+            </if>
+            <if test="idCard != null and idCard != ''">
+                and id_card like concat('%', #{idCard}, '%')
+            </if>
+        </where>
+    </select>
+
+    <!-- ====================== 2. 导游资格审核 ====================== -->
+    <resultMap id="qualificationMap" type="com.swu.tourismmanagesystem.entity.guide.GuideQualification">
+        <id column="id" property="id"/>
+        <result column="guide_id" property="guideId"/>
+        <result column="qualification_no" property="qualificationNo"/>
+        <result column="issue_date" property="issueDate"/>
+        <result column="expire_date" property="expireDate"/>
+        <result column="check_status" property="checkStatus"/>
+        <result column="check_remark" property="checkRemark"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <insert id="insertQualification">
+        insert into guide_qualification(guide_id, qualification_no, issue_date, expire_date, check_status, check_remark)
+        values(#{guideId}, #{qualificationNo}, #{issueDate}, #{expireDate}, #{checkStatus}, #{checkRemark})
+    </insert>
+
+    <update id="updateQualification">
+        update guide_qualification
+        <set>
+            <if test="qualificationNo != null">qualification_no=#{qualificationNo},</if>
+            <if test="issueDate != null">issue_date=#{issueDate},</if>
+            <if test="expireDate != null">expire_date=#{expireDate},</if>
+            <if test="checkStatus != null">check_status=#{checkStatus},</if>
+            <if test="checkRemark != null">check_remark=#{checkRemark},</if>
+        </set>
+        where guide_id=#{guideId}
+    </update>
+
+    <select id="getQualificationByGuideId" resultMap="qualificationMap">
+        select * from guide_qualification where guide_id=#{guideId}
+    </select>
+
+    <!-- ====================== 3. 导游实时状态 ====================== -->
+    <resultMap id="realTimeMap" type="com.swu.tourismmanagesystem.entity.guide.GuideRealTime">
+        <id column="id" property="id"/>
+        <result column="guide_id" property="guideId"/>
+        <result column="order_id" property="orderId"/>
+        <result column="team_size" property="teamSize"/>
+        <result column="longitude" property="longitude"/>
+        <result column="latitude" property="latitude"/>
+        <result column="work_status" property="workStatus"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <insert id="insertRealTime">
+        insert into guide_real_time(guide_id, order_id, team_size, longitude, latitude, work_status)
+        values(#{guideId}, #{orderId}, #{teamSize}, #{longitude}, #{latitude}, #{workStatus})
+    </insert>
+
+    <update id="updateRealTime">
+        update guide_real_time
+        <set>
+            <if test="orderId != null">order_id=#{orderId},</if>
+            <if test="teamSize != null">team_size=#{teamSize},</if>
+            <if test="longitude != null">longitude=#{longitude},</if>
+            <if test="latitude != null">latitude=#{latitude},</if>
+            <if test="workStatus != null">work_status=#{workStatus},</if>
+            update_time=now()
+        </set>
+        where guide_id=#{guideId}
+    </update>
+
+    <select id="getRealTimeByGuideId" resultMap="realTimeMap">
+        select * from guide_real_time where guide_id=#{guideId}
+    </select>
+
+    <!-- ====================== 4. 导游求职申请 ====================== -->
+    <resultMap id="jobApplyMap" type="com.swu.tourismmanagesystem.entity.guide.GuideJobApply">
+        <id column="id" property="id"/>
+        <result column="guide_id" property="guideId"/>
+        <result column="agency_id" property="agencyId"/>
+        <result column="apply_status" property="applyStatus"/>
+        <result column="apply_remark" property="applyRemark"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <insert id="insertJobApply">
+        insert into guide_job_apply(guide_id, agency_id, apply_status, apply_remark)
+        values(#{guideId}, #{agencyId}, #{applyStatus}, #{applyRemark})
+    </insert>
+
+    <update id="updateJobApply">
+        update guide_job_apply
+        <set>
+            <if test="applyStatus != null">apply_status=#{applyStatus},</if>
+            <if test="applyRemark != null">apply_remark=#{applyRemark},</if>
+            update_time=now()
+        </set>
+        where id=#{id}
+    </update>
+
+    <select id="listJobAppliesByAgencyId" resultMap="jobApplyMap">
+        select * from guide_job_apply where agency_id=#{agencyId}
+    </select>
+    <!--行程单申领-->
+    <resultMap id="orderApplyMap" type="com.swu.tourismmanagesystem.entity.guide.GuideOrderApply">
+        <id column="id" property="id"/>
+        <result column="guide_id" property="guideId"/>
+        <result column="agency_id" property="agencyId"/>
+        <result column="order_id" property="orderId"/>
+        <result column="apply_status" property="applyStatus"/>
+        <result column="apply_reason" property="applyReason"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+    <!--根据ID查询申领单 -->
+    <select id="getOrderApplyById" resultMap="orderApplyMap">
+        select * from guide_order_apply where id = #{id}
+    </select>
+    <insert id="insertOrderApply" useGeneratedKeys="true" keyProperty="id">
+        insert into guide_order_apply(guide_id, agency_id, order_id, apply_status, apply_reason)
+        values(#{guideId}, #{agencyId}, #{orderId}, #{applyStatus}, #{applyReason})
+    </insert>
+
+    <update id="updateOrderApply">
+        update guide_order_apply
+        <set>
+            <if test="applyStatus != null">apply_status=#{applyStatus},</if>
+            <if test="applyReason != null">apply_reason=#{applyReason},</if>
+            update_time=now()
+        </set>
+        where id=#{id}
+    </update>
+
+    <select id="listOrderAppliesByAgencyId" resultMap="orderApplyMap">
+        select * from guide_order_apply where agency_id=#{agencyId}
+    </select>
+
+    <!-- ====================== 导游诚信档案 ====================== -->
+    <resultMap id="guideCreditMap" type="com.swu.tourismmanagesystem.entity.guide.GuideCredit">
+        <id column="id" property="id"/>
+        <result column="guide_id" property="guideId"/>
+        <result column="credit_score" property="creditScore"/>
+        <result column="total_complaint" property="totalComplaint"/>
+        <result column="bad_complaint" property="badComplaint"/>
+        <result column="credit_desc" property="creditDesc"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="getGuideCreditByGuideId" resultMap="guideCreditMap">
+        select * from guide_credit where guide_id=#{guideId}
+    </select>
+
+    <insert id="insertGuideCredit" parameterType="com.swu.tourismmanagesystem.entity.guide.GuideCredit"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into guide_credit(guide_id, credit_score, total_complaint, bad_complaint, credit_desc)
+        values(#{guideId}, #{creditScore}, #{totalComplaint}, #{badComplaint}, #{creditDesc})
+    </insert>
+
+    <update id="updateGuideCredit">
+        update guide_credit
+        <set>
+            <if test="creditScore != null">credit_score = #{creditScore},</if>
+            <if test="totalComplaint != null">total_complaint = #{totalComplaint},</if>
+            <if test="badComplaint != null">bad_complaint = #{badComplaint},</if>
+            <if test="creditDesc != null">credit_desc = #{creditDesc},</if>
+            update_time = now()
+        </set>
+        where guide_id=#{guideId}
+    </update>
+</mapper>

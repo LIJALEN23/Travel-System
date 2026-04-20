@@ -89,7 +89,7 @@
                 <version>${spring-boot.version}</version>
                 <configuration>
                     <mainClass>com.swu.tourismmanagesystem.TourismManageSystemApplication</mainClass>
-                    <skip>true</skip>
+
                 </configuration>
                 <executions>
                     <execution>

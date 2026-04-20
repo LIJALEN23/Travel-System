@@ -1,0 +1,14 @@
+{
+  "src": [
+    "pages/Login",
+    "pages/Home",
+    "pages/Scenic",
+    "pages/Hotel",
+    "pages/Agency",
+    "pages/Guide",
+    "pages/Alert",
+    "pages/Complaint",
+    "pages/Credit",
+    "pages/System"
+  ]
+}
