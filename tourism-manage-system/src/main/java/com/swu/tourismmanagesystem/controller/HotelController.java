@@ -24,13 +24,13 @@ public class HotelController {
     public Result list(
             @RequestParam(required = false) String hotelName,
             @RequestParam(required = false) Integer starLevel,
-            @RequestParam(required = false) Long scenicId
+            @RequestParam(required = false) String scenicName
     ) {
         List<HotelBase> list;
 
-        // 1. 优先：按景区ID查询
-        if (scenicId != null) {
-            list = hotelService.findHotelByScenicId(scenicId);
+        // 1. 优先：按景区查询
+        if (scenicName != null) {
+            list = hotelService.findHotelByScenicSpotName(scenicName);
 
             if (StringUtils.hasText(hotelName)) {
                 list = list.stream()
@@ -70,13 +70,13 @@ public class HotelController {
     public Result nameList(
             @RequestParam(required = false) String hotelName,
             @RequestParam(required = false) Integer starLevel,
-            @RequestParam(required = false) Long scenicId
+            @RequestParam(required = false) String scenicName
     ) {
         List<HotelBase> list;
 
         // 完全复用 list 的查询逻辑
-        if (scenicId != null) {
-            list = hotelService.findHotelByScenicId(scenicId);
+        if (scenicName != null) {
+            list = hotelService.findHotelByScenicSpotName(scenicName);
 
             if (StringUtils.hasText(hotelName)) {
                 list = list.stream().filter(h -> h.getHotelName().contains(hotelName)).collect(Collectors.toList());

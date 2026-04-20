@@ -40,7 +40,7 @@ public class HotelServiceImpl implements HotelService {
         Map<String, Object> detailMap = new HashMap<>();
 
         // 酒店基本信息
-        Map<String, Object> hotelBase = hotelMapper.selectHotelDetailById(id);
+        HotelBase hotelBase = hotelMapper.selectHotelDetailById(id);
         // 管理员列表
         List<HotelManager> managerList = hotelMapper.selectManagerByHotelId(id);
         // 应急信息
@@ -55,10 +55,10 @@ public class HotelServiceImpl implements HotelService {
 
         return detailMap;
     }
-    // ==================== 新增：根据景区ID查询酒店 ====================
+    // ==================== 新增：根据景区名字查询酒店 ====================
     @Override
-    public List<HotelBase> findHotelByScenicId(Long scenicId) {
-        return hotelMapper.selectHotelByScenicId(scenicId);
+    public List<HotelBase> findHotelByScenicSpotName(String spotName) {
+        return hotelMapper.selectHotelByScenicSpotName(spotName);
     }
     // 获取酒店名称列表
     @Override
