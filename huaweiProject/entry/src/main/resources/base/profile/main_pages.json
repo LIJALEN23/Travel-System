@@ -16,6 +16,7 @@
     "pages/AgencyDetailPage",
     "pages/AgencyOrderPage",
     "pages/AgencyOrderDetailPage",
-    "pages/AgencyAbroadPage"
-    ]
+    "pages/AgencyAbroadPage",
+    "pages/GuideDetailPage"
+  ]
 }

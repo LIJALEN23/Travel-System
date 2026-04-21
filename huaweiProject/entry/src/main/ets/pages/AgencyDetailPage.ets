@@ -1,10 +1,11 @@
-import router from '@ohos.router'
-import http from '@ohos.net.http'
+import router from '@ohos.router';
+import promptAction from '@ohos.promptAction';
+
 import {
   TravelAgency, AgencyManager, VehicleDriver, TourismVehicle,
   AgencyEmergency, AgencyRealTimeData, AgencyDetailParams, AgencyPageParams
 } from '../utils/Agency';
-import { getAgencyBaseInfo, getAgencyManagers, getAgencyDrivers, getAgencyVehicles, getAgencyEmergency, getAgencyRealData } from '../api/agencyAPI'
+import { getAgencyBaseInfo, getAgencyManagers, getAgencyDrivers, getAgencyVehicles, getAgencyEmergency, getAgencyRealData } from '../api/agencyAPI';
 
 @Entry
 @Component
@@ -24,8 +25,6 @@ struct AgencyDetailPage {
     this.agencyId > 0 && this.loadAllData();
   }
 
-  // 统一请求封装
-  // 极简调用API
   async loadAllData(): Promise<void> {
     const token = AppStorage.get<string>("token") ?? "";
     if (!token) { this.toLogin(); return; }
@@ -54,6 +53,14 @@ struct AgencyDetailPage {
   goToAbroadPage(): void {
     router.pushUrl({
       url: "pages/AgencyAbroadPage",
+      params: { agencyId: this.agencyId, agencyName: this.agencyName } as AgencyPageParams
+    });
+  }
+
+  // 跳转导游求职审核
+  goToJobAuditPage(): void {
+    router.pushUrl({
+      url: "pages/AgencyJobAuditPage",
       params: { agencyId: this.agencyId, agencyName: this.agencyName } as AgencyPageParams
     });
   }
@@ -106,7 +113,8 @@ struct AgencyDetailPage {
               Text(`地址：${this.detail.address}`)
               Text(`电话：${this.detail.contactPhone}`)
 
-              // ====================== 新增功能按钮 ======================
+              // ====================== 🔄 优化后的按钮排版 ======================
+              // 第一行：电子行程单 + 出境游管理
               Row({ space: 10 }) {
                 Button("电子行程单")
                   .flexGrow(1)
@@ -125,6 +133,20 @@ struct AgencyDetailPage {
                   .onClick(() => this.goToAbroadPage())
               }
               .margin({ top: 15 })
+
+              // 第二行：求职审核 单独居中展示
+              Row() {
+                Button("求职审核")
+                  .width("60%")
+                  .height(40)
+                  .backgroundColor("#20B2AA")
+                  .fontColor(Color.White)
+                  .borderRadius(8)
+                  .onClick(() => this.goToJobAuditPage())
+              }
+              .width("100%")
+              .justifyContent(FlexAlign.Center)
+              .margin({ top: 10 })
               // ==========================================================
             }
             .width("95%")

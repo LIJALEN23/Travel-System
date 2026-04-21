@@ -301,7 +301,7 @@ Authorization: Bearer {{token}}
   "applyRemark": "有5年导游经验，熟悉四川景区"
 }
 
-### 1.12 查询旅行社求职申请列表（agencyId=1）
+### 1.12 查询对应旅行社求职申请列表（agencyId=1）
 GET http://localhost:8080/guide/job/applyList/1
 Authorization: Bearer {{token}}
 
@@ -372,6 +372,7 @@ Authorization: Bearer {{token}}
 GET http://localhost:8080/guide/realTime/1
 Authorization: Bearer {{token}}
 
++
 ### 1.19 查询导游诚信档案（新增）
 GET http://localhost:8080/guide/credit/1
 Authorization: Bearer {{token}}
