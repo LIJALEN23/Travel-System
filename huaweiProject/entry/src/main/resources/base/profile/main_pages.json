@@ -10,7 +10,6 @@
     "pages/Alert",
     "pages/Complaint",
     "pages/Credit",
-    "pages/System",
     "pages/ScenicDetailPage",
     "pages/HotelDetailPage"
   ]
