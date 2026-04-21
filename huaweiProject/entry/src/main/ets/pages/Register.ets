@@ -2,7 +2,7 @@ import router from '@ohos.router'
 import http from '@ohos.net.http'
 import { BusinessError } from '@ohos.base'
 import { RegisterResult } from '../utils/Login'
-
+import env from '../utils/env';
 @Entry
 @Component
 struct Register {
@@ -152,7 +152,7 @@ struct Register {
 
     this.message = '正在注册...'
     const httpRequest = http.createHttp()
-    const registerUrl: string = 'http://192.168.52.143:8080/user/register'
+    const registerUrl: string = `${env.BASE_API}/user/register`
 
     // 2. 调用后端注册接口，完全匹配你提供的JSON格式
     httpRequest.request(

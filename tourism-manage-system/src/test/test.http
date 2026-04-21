@@ -27,7 +27,7 @@ Content-Type: application/json
 %}
 
 ### 3. 景区列表
-GET http://192.168.52.143:8080/spot/list
+GET http://192.168.52.155:8080/spot/list
 Accept: application/json
 Authorization: Bearer {{token}}
 
@@ -37,55 +37,55 @@ Accept: application/json
 Authorization: Bearer {{token}}
 
 ### 5. 景区名称下拉列表
-GET http://192.168.52.143:8080/spot/nameList
+GET http://192.168.52.155:8080/spot/nameList
 Accept: application/json
 Authorization: Bearer {{token}}
 
 ----------------------------------------------------------------------
 
 ### 1. 查询【所有酒店】（无任何参数）
-GET http://192.168.52.143:8080/hotel/list
+GET http://192.168.52.155:8080/hotel/list
 Accept: application/json
 Authorization: Bearer {{token}}
 
 ### 2. 按【酒店名称模糊查询】（例：查“青城”相关酒店）
-GET http://localhost:8080/hotel/list?hotelName=青城
+GET http://192.168.52.155:8080/hotel/list?hotelName=青城
 Accept: application/json
 Authorization: Bearer {{token}}
 
 ### 3. 按【星级筛选】（例：5星酒店）
-GET http://localhost:8080/hotel/list?starLevel=5
+GET http://192.168.52.155:8080/hotel/list?starLevel=5
 Accept: application/json
 Authorization: Bearer {{token}}
 
 ### 4. 按【景区名字查询】
-GET http://localhost:8080/hotel/list?scenicName=成都青城山
+GET http://192.168.52.155:8080/hotel/list?scenicName=成都青城山
 Accept: application/json
 Authorization: Bearer {{token}}
 
 ### 5. 【名称 + 星级】组合查询（例：含“温泉”的4星酒店）
-GET http://localhost:8080/hotel/list?hotelName=温泉&starLevel=4
+GET http://192.168.52.155:8080/hotel/list?hotelName=温泉&starLevel=4
 Accept: application/json
 Authorization: Bearer {{token}}
 ### 查询特定酒店详细
-GET http://192.168.52.143:8080/hotel/detail?id=1
+GET http://192.168.52.155:8080/hotel/detail?id=1
 Accept: application/json
 Authorization: Bearer {{token}}
 
 ----------------------------------------------------------------------
 
 ### 1. 旅行社列表 + 模糊查询（搜索含“国际”的旅行社）
-GET http://192.168.52.143:8080/agency/list?agencyName=国际&licenseNo=
+GET http://192.168.52.155:8080/agency/list?agencyName=国际&licenseNo=
 Accept: application/json
 Authorization: Bearer {{token}}
 
 ### 2. 旅行社基础信息（id=1 四川省国旅）
-GET http://localhost:8080/agency/baseInfo/1
+GET http://192.168.52.155:8080/agency/baseInfo/1
 Accept: application/json
 Authorization: Bearer {{token}}
 
 ### 3. 旅行社管理员信息
-GET http://localhost:8080/agency/manager/1
+GET http://192.168.52.155:8080/agency/manager/1
 Accept: application/json
 Authorization: Bearer {{token}}
 
@@ -130,7 +130,7 @@ GET http://localhost:8080/agency/order/list?agencyId=1&orderStatus=待出发&tea
 Accept: application/json
 Authorization: Bearer {{token}}
 
-### 9. 新增旅行社电子行程单（新接口）
+### 9. 新增旅行社电子行程单（待导游）
 POST http://localhost:8080/agency/order/add
 Content-Type: application/json
 Authorization: Bearer {{token}}
@@ -148,7 +148,7 @@ Authorization: Bearer {{token}}
   "orderStatus": "待确定"
 }
 
-### 10. 单个行程单详情 → 显示【司机 + 车辆】
+### 10. 单个行程单详情
 GET http://localhost:8080/agency/order/detail/1
 Accept: application/json
 Authorization: Bearer {{token}}

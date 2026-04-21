@@ -12,6 +12,9 @@
     "pages/Credit",
     "pages/System",
     "pages/ScenicDetailPage",
-    "pages/HotelDetailPage"
+    "pages/HotelDetailPage",
+    "pages/AgencyDetailPage",
+    "pages/AgencyOrderPage",
+    "pages/AgencyOrderDetailPage"
   ]
 }

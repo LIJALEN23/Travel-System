@@ -2,6 +2,7 @@ import router from '@ohos.router'
 import http from '@ohos.net.http'
 import { BusinessError } from '@ohos.base'
 import { LoginResult } from '../utils/Login'
+import env from '../utils/env';
 
 @Entry
 @Component
@@ -102,7 +103,7 @@ struct Login {
 
     this.message = '登录中...'
     const httpRequest = http.createHttp()
-    const url = 'http://192.168.52.143:8080/user/login'
+    const url = `${env.BASE_API}/user/login`
 
     httpRequest.request(
       url,

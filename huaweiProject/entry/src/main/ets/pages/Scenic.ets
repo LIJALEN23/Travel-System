@@ -1,6 +1,7 @@
 import router from '@ohos.router'
 import http from '@ohos.net.http'
 import { Result, ScenicSpot } from '../utils/Scenic'
+import env from '../utils/env';
 
 @Entry
 @Component
@@ -22,7 +23,7 @@ struct Scenic {
 
     const httpRequest = http.createHttp();
     try {
-      let url = "http://192.168.52.143:8080/spot/list";
+      let url = `${env.BASE_API}/spot/list`;
       if (spotName && spotName.trim()) {
         url += `?spotName=${encodeURIComponent(spotName.trim())}`;
       }

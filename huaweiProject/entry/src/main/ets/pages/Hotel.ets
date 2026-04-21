@@ -1,7 +1,7 @@
 import router from '@ohos.router'
 import http from '@ohos.net.http'
 import { Result, HotelBase, HotelQueryParams } from '../utils/Hotel'
-
+import env from '../utils/env';
 export interface SelectOption {
   value: string;
   label: string;
@@ -55,7 +55,7 @@ struct Hotel {
     try {
       // 使用ArkTS标准的await方式请求（官方推荐）
       const res: http.HttpResponse = await httpRequest.request(
-        "http://192.168.52.143:8080/spot/nameList",
+        `${env.BASE_API}/spot/nameList`,
         {
           method: http.RequestMethod.GET,
           header: {
@@ -125,7 +125,7 @@ struct Hotel {
     const httpRequest = http.createHttp();
     try {
       // 拼接请求URL
-      let url: string = "http://192.168.52.143:8080/hotel/list";
+      let url: string = `${env.BASE_API}/hotel/list`;
       const queryParams: string[] = [];
       if (params?.hotelName && params.hotelName.trim()) {
         queryParams.push(`hotelName=${encodeURIComponent(params.hotelName.trim())}`);

@@ -9,6 +9,7 @@ import {
   ScenicRealTimeData
 } from '../utils/Scenic'
 import web_webview from '@ohos.web.webview';
+import env from '../utils/env';
 
 @Entry
 @Component
@@ -173,7 +174,7 @@ struct ScenicDetailPage {
     const httpRequest = http.createHttp();
     try {
       const res: http.HttpResponse = await httpRequest.request(
-        `http://192.168.52.143:8080/spot/detail?id=${this.spotId}`,
+        `${env.BASE_API}/spot/detail?id=${this.spotId}`,
         {
           method: http.RequestMethod.GET,
           header: {

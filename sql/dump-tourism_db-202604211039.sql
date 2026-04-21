@@ -488,7 +488,7 @@ CREATE TABLE `hotel_base` (
   `hotel_name` varchar(100) NOT NULL COMMENT '饭店名称',
   `star_level` int DEFAULT NULL COMMENT '星级 3/4/5',
   `max_capacity` int DEFAULT NULL COMMENT '最大接待量',
-  `parking_num` int DEFAULT NULL COMMENT '停车位数量',
+  `total_parking` int DEFAULT NULL COMMENT '停车位数量',
   `address` varchar(255) DEFAULT NULL COMMENT '详细地址',
   `longitude` decimal(10,6) DEFAULT NULL COMMENT '经度',
   `latitude` decimal(10,6) DEFAULT NULL COMMENT '纬度',
@@ -526,7 +526,7 @@ CREATE TABLE `hotel_emergency` (
   PRIMARY KEY (`id`),
   KEY `hotel_id` (`hotel_id`),
   CONSTRAINT `hotel_emergency_ibfk_1` FOREIGN KEY (`hotel_id`) REFERENCES `hotel_base` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='饭店应急救援表';
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='饭店应急救援表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -535,6 +535,7 @@ CREATE TABLE `hotel_emergency` (
 
 LOCK TABLES `hotel_emergency` WRITE;
 /*!40000 ALTER TABLE `hotel_emergency` DISABLE KEYS */;
+INSERT INTO `hotel_emergency` VALUES (1,1,'张灿','1555555555','川Q5638','2026-04-20 15:56:30');
 /*!40000 ALTER TABLE `hotel_emergency` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -558,7 +559,7 @@ CREATE TABLE `hotel_manager` (
   UNIQUE KEY `uk_work_no` (`work_no`),
   KEY `hotel_id` (`hotel_id`),
   CONSTRAINT `hotel_manager_ibfk_1` FOREIGN KEY (`hotel_id`) REFERENCES `hotel_base` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='饭店管理人员表';
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='饭店管理人员表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -567,6 +568,7 @@ CREATE TABLE `hotel_manager` (
 
 LOCK TABLES `hotel_manager` WRITE;
 /*!40000 ALTER TABLE `hotel_manager` DISABLE KEYS */;
+INSERT INTO `hotel_manager` VALUES (1,1,'0001','吴淞','18888888','大堂经理',1,'2026-04-20 15:55:56');
 /*!40000 ALTER TABLE `hotel_manager` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1003,4 +1005,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-04-20 10:38:39
+-- Dump completed on 2026-04-21 10:39:56

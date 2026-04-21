@@ -10,6 +10,7 @@ import {
   HotelEmergency
 } from '../utils/Hotel';
 
+import env from '../utils/env';
 @Entry
 @Component
 struct HotelDetailPage {
@@ -180,7 +181,7 @@ struct HotelDetailPage {
     try {
       // 发送GET请求
       const res: http.HttpResponse = await httpRequest.request(
-        `http://192.168.52.143:8080/hotel/detail?id=${this.hotelId}`,
+        `${env.BASE_API}/hotel/detail?id=${this.hotelId}`,
         {
           method: http.RequestMethod.GET,
           header: {
