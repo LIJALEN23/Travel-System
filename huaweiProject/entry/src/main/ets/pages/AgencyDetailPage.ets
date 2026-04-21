@@ -1,17 +1,10 @@
 import router from '@ohos.router'
 import http from '@ohos.net.http'
 import {
-  TravelAgency,
-  AgencyManager,
-  VehicleDriver,
-  TourismVehicle,
-  AgencyEmergency,
-  AgencyRealTimeData,
-  ApiResult,
-  AgencyDetailParams,
-  AgencyPageParams
+  TravelAgency, AgencyManager, VehicleDriver, TourismVehicle,
+  AgencyEmergency, AgencyRealTimeData, AgencyDetailParams, AgencyPageParams
 } from '../utils/Agency';
-import env from '../utils/env';
+import { getAgencyBaseInfo, getAgencyManagers, getAgencyDrivers, getAgencyVehicles, getAgencyEmergency, getAgencyRealData } from '../api/agencyAPI'
 
 @Entry
 @Component
@@ -28,46 +21,22 @@ struct AgencyDetailPage {
   aboutToAppear(): void {
     const params: AgencyDetailParams = router.getParams() as AgencyDetailParams;
     this.agencyId = params.id;
-    if (this.agencyId > 0) {
-      this.loadAllData();
-    }
+    this.agencyId > 0 && this.loadAllData();
   }
 
   // 统一请求封装
-  private async requestApi<T>(url: string, token: string): Promise<T> {
-    const req: http.HttpRequest = http.createHttp();
-    try {
-      const res: http.HttpResponse = await req.request(url, {
-        method: http.RequestMethod.GET,
-        header: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      });
-      const jsonStr: string = res.result as string;
-      const result: ApiResult<T> = JSON.parse(jsonStr);
-      return result.data;
-    } finally {
-      req.destroy();
-    }
-  }
-
+  // 极简调用API
   async loadAllData(): Promise<void> {
-    const token: string = AppStorage.get<string>("token") ?? "";
-    if (!token) {
-      this.toLogin();
-      return;
-    }
-    const baseUrl: string = env.BASE_API;
-
+    const token = AppStorage.get<string>("token") ?? "";
+    if (!token) { this.toLogin(); return; }
     try {
-      this.detail = await this.requestApi<TravelAgency>(`${baseUrl}/agency/baseInfo/${this.agencyId}`, token);
-      if (this.detail) this.agencyName = this.detail.agencyName;
-      this.managers = await this.requestApi<AgencyManager[]>(`${baseUrl}/agency/manager/${this.agencyId}`, token);
-      this.drivers = await this.requestApi<VehicleDriver[]>(`${baseUrl}/agency/driver/${this.agencyId}`, token);
-      this.vehicles = await this.requestApi<TourismVehicle[]>(`${baseUrl}/agency/vehicle/${this.agencyId}`, token);
-      this.emergencyList = await this.requestApi<AgencyEmergency[]>(`${baseUrl}/agency/emergency/${this.agencyId}`, token);
-      this.realData = await this.requestApi<AgencyRealTimeData>(`${baseUrl}/agency/realData/${this.agencyId}`, token);
+      this.detail = await getAgencyBaseInfo(token, this.agencyId);
+      this.agencyName = this.detail?.agencyName || "";
+      this.managers = await getAgencyManagers(token, this.agencyId);
+      this.drivers = await getAgencyDrivers(token, this.agencyId);
+      this.vehicles = await getAgencyVehicles(token, this.agencyId);
+      this.emergencyList = await getAgencyEmergency(token, this.agencyId);
+      this.realData = await getAgencyRealData(token, this.agencyId);
     } catch (err) {
       console.error("加载详情失败", err);
     }

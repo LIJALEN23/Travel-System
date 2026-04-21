@@ -1,7 +1,8 @@
 import router from '@ohos.router'
-import http from '@ohos.net.http'
-import { Result, HotelBase, HotelQueryParams } from '../utils/Hotel'
-import env from '../utils/env';
+import { HotelBase, HotelQueryParams } from '../utils/Hotel'
+// 导入封装的酒店API
+import { getScenicNameList, getHotelList } from '../api/hotelAPI'
+
 export interface SelectOption {
   value: string;
   label: string;
@@ -32,18 +33,7 @@ struct Hotel {
     }, 100);
   }
 
-  // 核心修复：适配ArkTS标准的响应解析（放弃非标准的data/end事件）
-  private arrayBufferToString(buffer: ArrayBuffer): string {
-    if (!buffer) return "{}";
-    const uint8Array = new Uint8Array(buffer);
-    let str = '';
-    for (let i = 0; i < uint8Array.length; i++) {
-      str += String.fromCharCode(uint8Array[i]);
-    }
-    return str.trim() || "{}";
-  }
-
-  // 获取景区名称选项（完全适配ArkTS HTTP标准）
+  // 🔥 极简：仅调用封装API
   async getScenicOptions(): Promise<void> {
     const token: string = AppStorage.get<string>("token") || "";
     if (!token) {
@@ -51,48 +41,8 @@ struct Hotel {
       return;
     }
 
-    const httpRequest = http.createHttp();
     try {
-      // 使用ArkTS标准的await方式请求（官方推荐）
-      const res: http.HttpResponse = await httpRequest.request(
-        `${env.BASE_API}/spot/nameList`,
-        {
-          method: http.RequestMethod.GET,
-          header: {
-            "Authorization": "Bearer " + token,
-            "Content-Type": "application/json;charset=utf-8",
-            "Accept-Encoding": "identity" // 禁用压缩，避免解析问题
-          },
-          // 关键：设置响应类型为文本（避免ArrayBuffer解析问题）
-          expectDataType: http.HttpDataType.STRING
-        }
-      );
-
-      console.info("景区接口响应码：", res.responseCode);
-      if (res.responseCode !== 200) {
-        throw new Error(`响应码错误：${res.responseCode}`);
-      }
-
-      // 直接获取字符串响应（ArkTS标准方式）
-      let jsonString: string = "";
-      if (typeof res.result === 'string') {
-        jsonString = res.result;
-      } else if (res.result instanceof ArrayBuffer) {
-        jsonString = this.arrayBufferToString(res.result);
-      } else {
-        jsonString = "{}";
-      }
-      console.info("景区接口解析后数据：", jsonString);
-
-      // 解析JSON（兜底容错）
-      let result: Result<string[]> = { code: 500, msg: "解析失败", data: [] };
-      try {
-        result = JSON.parse(jsonString);
-      } catch (parseErr) {
-        console.error("景区JSON解析失败：", (parseErr as Error).message);
-      }
-
-      // 处理业务逻辑
+      const result = await getScenicNameList(token);
       if (result.code === 200 && result.data) {
         this.scenicOptions = result.data.map((name: string): SelectOption => ({
           value: name,
@@ -109,12 +59,10 @@ struct Hotel {
       console.error("获取景区选项错误：", err.message);
       this.message = `景区加载失败：${err.message.substring(0, 20)}`;
       this.scenicOptions = [{ value: "全部", label: "全部" }];
-    } finally {
-      httpRequest.destroy(); // 无需延迟，ArkTS标准方式可直接销毁
     }
   }
 
-  // 获取酒店列表（完全适配ArkTS HTTP标准）
+  // 🔥 极简：仅调用封装API
   async getHotelList(params?: HotelQueryParams): Promise<void> {
     const token: string = AppStorage.get<string>("token") || "";
     if (!token) {
@@ -122,69 +70,11 @@ struct Hotel {
       return;
     }
 
-    const httpRequest = http.createHttp();
     try {
-      // 拼接请求URL
-      let url: string = `${env.BASE_API}/hotel/list`;
-      const queryParams: string[] = [];
-      if (params?.hotelName && params.hotelName.trim()) {
-        queryParams.push(`hotelName=${encodeURIComponent(params.hotelName.trim())}`);
-      }
-      if (params?.starLevel && params.starLevel > 0) {
-        queryParams.push(`starLevel=${params.starLevel}`);
-      }
-      if (params?.scenicName && params.scenicName !== "全部") {
-        queryParams.push(`scenicName=${encodeURIComponent(params.scenicName)}`);
-      }
-      if (queryParams.length > 0) {
-        url += `?${queryParams.join("&")}`;
-      }
-      console.info("酒店请求URL：", url);
-
-      // ArkTS标准的await请求（核心修复：指定响应类型为字符串）
-      const res: http.HttpResponse = await httpRequest.request(
-        url,
-        {
-          method: http.RequestMethod.GET,
-          header: {
-            "Authorization": "Bearer " + token,
-            "Content-Type": "application/json;charset=utf-8",
-            "Accept-Encoding": "identity"
-          },
-          // 关键修复：强制响应为字符串类型，避免ArrayBuffer解析问题
-          expectDataType: http.HttpDataType.STRING
-        }
-      );
-
-      console.info("酒店接口响应码：", res.responseCode);
-      if (res.responseCode !== 200) {
-        throw new Error(`响应码错误：${res.responseCode}`);
-      }
-
-      // 解析响应（ArkTS标准方式）
-      let jsonString: string = "";
-      if (typeof res.result === 'string') {
-        jsonString = res.result; // 直接使用字符串响应
-      } else if (res.result instanceof ArrayBuffer) {
-        jsonString = this.arrayBufferToString(res.result);
-      } else {
-        jsonString = "{}";
-      }
-      console.info("酒店接口解析后数据：", jsonString);
-
-      // 解析JSON（容错处理）
-      let result: Result<HotelBase[]> = { code: 500, msg: "解析失败", data: [] };
-      try {
-        result = JSON.parse(jsonString);
-      } catch (parseErr) {
-        console.error("酒店JSON解析失败：", (parseErr as Error).message);
-      }
-
-      // 处理业务逻辑
+      const result = await getHotelList(token, params);
       if (result.code === 200) {
         this.hotelList = result.data || [];
         this.message = this.hotelList.length === 0 ? "暂无匹配的酒店" : "";
-        console.info("酒店列表加载成功，数量：", this.hotelList.length);
       } else {
         this.message = `酒店加载失败：${result.msg || '未知错误'}`;
         this.hotelList = [];
@@ -192,33 +82,22 @@ struct Hotel {
     } catch (e) {
       const err = e as Error;
       console.error("获取酒店列表错误：", err.message);
-      // 区分真实网络异常
-      if (err.message.includes("Network") || err.message.includes("Connection")) {
-        this.message = "网络异常：请检查网络连接";
-      } else {
-        this.message = `酒店加载失败：${err.message.substring(0, 20)}`;
-      }
+      this.message = err.message.includes("Network") ? "网络异常：请检查网络连接" : `酒店加载失败：${err.message.substring(0, 20)}`;
       this.hotelList = [];
-    } finally {
-      httpRequest.destroy();
     }
   }
 
-  // 搜索逻辑
+  // 搜索逻辑（不变）
   onSearch(): void {
     const params: HotelQueryParams = {
       hotelName: this.searchText.trim() || undefined,
-      starLevel: this.selectedStarLevel === "全部"
-        ? undefined
-        : Number(this.selectedStarLevel),
-      scenicName: this.selectedScenicName === "全部"
-        ? undefined
-        : this.selectedScenicName
+      starLevel: this.selectedStarLevel === "全部" ? undefined : Number(this.selectedStarLevel),
+      scenicName: this.selectedScenicName === "全部" ? undefined : this.selectedScenicName
     };
     this.getHotelList(params);
   }
 
-  // 清空筛选条件
+  // 清空筛选（不变）
   clearSearch(): void {
     this.searchText = "";
     this.selectedStarLevel = "全部";
@@ -226,30 +105,28 @@ struct Hotel {
     this.getHotelList();
   }
 
-  // 跳转登录页
   toLogin(): void {
     AppStorage.delete("token");
     router.replaceUrl({ url: "pages/Login" });
   }
 
-  // 返回首页
   backToHome(): void {
     router.back();
   }
 
-  // 跳转酒店详情页
   goToDetail(id: number): void {
     console.info("点击酒店ID：", id);
     router.pushUrl({
       url: "pages/HotelDetailPage",
       params: { id: id }
     }, (err) => {
-      if (err) {
-        console.error("跳转详情失败：", (err as Error).message);
-      }
+      if (err) console.error("跳转详情失败：", (err as Error).message);
     });
   }
 
+  // ======================
+  // 【UI 渲染代码完全不变】
+  // ======================
   build() {
     Column() {
       // 顶部导航栏

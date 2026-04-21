@@ -1,7 +1,7 @@
 import router from '@ohos.router'
 import http from '@ohos.net.http'
-import { TravelAgency, ApiResult } from '../utils/Agency'
-import env from '../utils/env';
+import { TravelAgency } from '../utils/Agency'
+import { getAgencyList } from '../api/agencyAPI'
 
 @Entry
 @Component
@@ -14,37 +14,14 @@ struct Agency {
     this.getAgencyList();
   }
 
-  // 获取旅行社列表（复刻景区请求逻辑）
   async getAgencyList(agencyName?: string): Promise<void> {
     const token = AppStorage.get<string>("token") || "";
     if (!token) {
       this.toLogin();
       return;
     }
-
-    const httpRequest = http.createHttp();
     try {
-      let url = `${env.BASE_API}/agency/list`;
-      // 搜索参数（和景区完全一致）
-      if (agencyName && agencyName.trim()) {
-        url += `?agencyName=${encodeURIComponent(agencyName.trim())}`;
-      }
-
-      const res = await httpRequest.request(
-        url,
-        {
-          method: http.RequestMethod.GET,
-          header: {
-            "Authorization": "Bearer " + token,
-            "Content-Type": "application/json"
-          }
-        }
-      );
-
-      const jsonString = res.result as string;
-      console.info("旅行社列表返回数据：", jsonString);
-      const result: ApiResult<TravelAgency[]> = JSON.parse(jsonString);
-
+      const result = await getAgencyList(token, agencyName);
       if (result.code === 200) {
         this.agencyList = result.data;
         this.message = result.data.length === 0 ? "暂无匹配的旅行社" : "";
@@ -54,8 +31,6 @@ struct Agency {
     } catch (e) {
       console.error("请求异常：", e);
       this.message = "网络异常";
-    } finally {
-      httpRequest.destroy();
     }
   }
 

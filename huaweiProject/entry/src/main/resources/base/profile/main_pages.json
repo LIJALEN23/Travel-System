@@ -15,6 +15,7 @@
     "pages/HotelDetailPage",
     "pages/AgencyDetailPage",
     "pages/AgencyOrderPage",
-    "pages/AgencyOrderDetailPage"
-  ]
+    "pages/AgencyOrderDetailPage",
+    "pages/AgencyAbroadPage"
+    ]
 }

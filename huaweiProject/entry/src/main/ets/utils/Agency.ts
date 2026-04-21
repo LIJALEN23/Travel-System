@@ -95,13 +95,47 @@ export interface AbroadTravel {
   createTime: string;
   updateTime: string;
 }
-
-// 新增：行程单参数接口（修复报错1）
+// 行程单详情完整数据（订单+司机+车辆）
+export interface OrderDetailVO {
+  order: TravelOrder;
+  driver: VehicleDriver;
+  vehicle: TourismVehicle;
+}
+// 定义表单类型
+export  interface  AddOrderForm {
+  teamName: string;
+  peopleCount: number;
+  startAddress: string;
+  endAddress: string;
+  startTime: string;
+}
+// 定义弹窗表单类型
+export interface AddAbroadForm {
+  teamName: string;
+  country: string;
+  startTime: string;
+}
+// ==================== 路由参数相关 ====================
+// 行程单详情页路由参数
 export interface OrderDetailParams {
   orderId: number;
 }
+// 旅行社详情路由参数
+export interface AgencyDetailParams {
+  id: number;
+}
+// 出境游详情页路由参数
+export interface AbroadDetailParams {
+  id: number;
+}
+// 通用页面路由参数（带旅行社ID/名称）
+export interface AgencyPageParams {
+  agencyId: number;
+  agencyName: string;
+}
 
-// 新增：创建行程单参数接口（修复报错3）
+// ==================== 请求参数相关 ====================
+// 创建行程单参数
 export interface CreateOrderParams {
   agencyId: number;
   vehicleId: number;
@@ -115,18 +149,24 @@ export interface CreateOrderParams {
   orderStatus: string;
 }
 
-// 路由参数类型（详情页专用）
-export interface AgencyDetailParams {
-  id: number;
-}
-
-// 通用路由参数（行程单/出境游跳转专用）
-export interface AgencyPageParams {
+// 创建出境游参数
+export interface CreateAbroadParams {
   agencyId: number;
-  agencyName: string;
+  teamName: string;
+  country: string;
+  visaStatus: string;
+  applyTime: string;
+  startTime: string;
+  status: string;
 }
 
-// 统一后端返回
+// 出境游审核参数（审核/驳回 核心接口）
+export interface AuditAbroadParams {
+  id: number;
+  visaStatus: string;
+}
+
+// ==================== 通用后端返回结构体 ====================
 export interface ApiResult<T> {
   code: number;
   msg: string;
