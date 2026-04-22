@@ -48,7 +48,7 @@ struct Home {
         this.FuncItem("🧑‍✈️ 导游管理", "pages/Guide")
         this.FuncItem("🚨 告警信息管理", "pages/Alert")
         this.FuncItem("📢 游客投诉管理", "pages/Complaint")
-        this.FuncItem("📜 企业诚信档案", "pages/Credit")
+
       }
       .width('100%')
       .padding({ bottom: 40 })

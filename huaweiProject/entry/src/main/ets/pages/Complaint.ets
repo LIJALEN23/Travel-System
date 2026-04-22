@@ -1,9 +1,9 @@
 import router from '@ohos.router'
 import http from '@ohos.net.http'
 import prompt from '@ohos.prompt'
-import { ComplaintApi } from '../common/api/complaint'
-import { Complaint as ComplaintEntity, HandleComplaintRequest, ComplaintQueryParams, CreditInfo } from '../utils/Complaint'
-import { Result } from '../utils/Login'
+
+import { Result,Complaint as ComplaintEntity, HandleComplaintRequest, ComplaintQueryParams, CreditInfo, ComplaintConstant } from '../utils/Complaint'
+import { ComplaintApi } from '../api/complaintAPI'
 
 @Entry
 @Component
@@ -22,16 +22,17 @@ struct ComplaintPage {
   @State creditInfo: CreditInfo | null = null
   @State creditType: string = ''
   @State creditId: number = 0
+  @State token: string = '' // 用户token
 
-  // 新增投诉表单数据
+  // 新增投诉表单数据 - 与后端Complaint实体对应
   @State newComplaint: ComplaintEntity = {
-    title: '',
-    content: '',
-    complaintType: '导游',
-    complainant: '',
-    contactInfo: '',
-    complaintTime: new Date().toISOString().split('T')[0],
-    status: '待处理'
+    visitorName: '',           // 游客姓名
+    visitorPhone: '',          // 游客电话
+    title: '',                 // 投诉标题
+    content: '',               // 投诉内容
+    agencyId: 0,               // 旅行社ID（可选）
+    guideId: 0,                // 导游ID（可选）
+    status: ComplaintConstant.STATUS_PENDING
   } as ComplaintEntity
 
   // 处理投诉表单数据
@@ -39,10 +40,13 @@ struct ComplaintPage {
     complaintId: 0,
     handleUser: '',
     handleResult: '',
-    status: '已办结'
+    status: ComplaintConstant.STATUS_DONE
   }
 
   aboutToAppear() {
+    // 获取token（实际项目中应从登录状态获取）
+    this.token = this.getTokenFromStorage()
+    console.info('当前 token >>> ' + this.token) // 你可以看到真实token
     this.loadComplaints()
   }
 
@@ -69,15 +73,32 @@ struct ComplaintPage {
   }
 
   // ================================
-  // 头部标题和选项卡
+  // 头部标题 + 返回按钮（已加）
   // ================================
   @Builder
   Header() {
     Column() {
-      Text('游客投诉管理')
-        .fontSize(24)
-        .fontWeight(FontWeight.Bold)
-        .margin({ top: 20, bottom: 10 })
+      // 标题行 + 返回按钮
+      Row() {
+        Button("返回")
+          .width(70)
+          .height(36)
+          .backgroundColor("#007DFF")
+          .fontColor(Color.White)
+          .borderRadius(8)
+          .onClick(() => {
+            router.back();
+          })
+
+        Text('游客投诉管理')
+          .fontSize(22)
+          .fontWeight(FontWeight.Bold)
+          .layoutWeight(1)
+          .textAlign(TextAlign.Center)
+      }
+        .width("100%")
+        .padding({ left:10, right:10, top:10 })
+        .margin({ bottom: 10 })
 
       // 选项卡
       Row() {
@@ -221,7 +242,7 @@ struct ComplaintPage {
           .fontSize(16)
           .fontWeight(FontWeight.Bold)
           .layoutWeight(1)
-        
+
         Text(this.getStatusText(complaint.status))
           .fontSize(12)
           .fontColor(this.getStatusColor(complaint.status))
@@ -235,12 +256,23 @@ struct ComplaintPage {
         .fontColor('#666')
 
       Row() {
-        Text(`投诉人: ${complaint.complainant}`)
+        Text(`投诉人: ${complaint.visitorName}`)
           .fontSize(12)
           .fontColor('#999')
           .layoutWeight(1)
-        
-        Text((complaint.complaintTime || '').split('T')[0])
+
+        Text(`电话: ${complaint.visitorPhone}`)
+          .fontSize(12)
+          .fontColor('#999')
+      }
+
+      Row() {
+        Text(`投诉编号: ${complaint.complaintNo || '无'}`)
+          .fontSize(12)
+          .fontColor('#999')
+          .layoutWeight(1)
+
+        Text((complaint.createTime || '').split('T')[0])
           .fontSize(12)
           .fontColor('#999')
       }
@@ -256,7 +288,7 @@ struct ComplaintPage {
             this.showDetailDialog = true
           })
 
-        if (complaint.status === '待处理') {
+        if (complaint.status === ComplaintConstant.STATUS_PENDING) {
           Button('处理')
             .width(60)
             .height(30)
@@ -301,6 +333,14 @@ struct ComplaintPage {
           .fontWeight(FontWeight.Bold)
           .margin({ top: 10, bottom: 10 })
 
+        this.FormField('游客姓名', (value: string) => {
+          this.newComplaint.visitorName = value
+        })
+
+        this.FormField('游客电话', (value: string) => {
+          this.newComplaint.visitorPhone = value
+        })
+
         this.FormField('投诉标题', (value: string) => {
           this.newComplaint.title = value
         })
@@ -309,37 +349,13 @@ struct ComplaintPage {
           this.newComplaint.content = value
         }, true)
 
-        this.FormField('投诉人', (value: string) => {
-          this.newComplaint.complainant = value
+        this.FormField('旅行社ID（可选）', (value: string) => {
+          this.newComplaint.agencyId = parseInt(value) || 0
         })
 
-        this.FormField('联系方式', (value: string) => {
-          this.newComplaint.contactInfo = value
+        this.FormField('导游ID（可选）', (value: string) => {
+          this.newComplaint.guideId = parseInt(value) || 0
         })
-
-        // 投诉类型选择
-        Row() {
-          Text('投诉类型:')
-            .fontSize(16)
-            .width(80)
-          
-          Radio({ value: '导游', group: 'complaintType' })
-            .checked(this.newComplaint.complaintType === '导游')
-            .onChange((value: boolean) => {
-              if (value) this.newComplaint.complaintType = '导游'
-            })
-          Text('导游')
-            .margin({ left: 5 })
-          
-          Radio({ value: '旅行社', group: 'complaintType' })
-            .checked(this.newComplaint.complaintType === '旅行社')
-            .onChange((value: boolean) => {
-              if (value) this.newComplaint.complaintType = '旅行社'
-            })
-          Text('旅行社')
-            .margin({ left: 5 })
-        }
-        .width('90%')
 
         Button('提交投诉')
           .width('90%')
@@ -363,7 +379,7 @@ struct ComplaintPage {
       Text(label)
         .fontSize(16)
         .alignSelf(ItemAlign.Start)
-      
+
       if (multiline) {
         TextArea({ text: '' })
           .width('90%')
@@ -400,7 +416,7 @@ struct ComplaintPage {
             this.creditType = 'guide'
             this.showCreditDialog = true
           })
-        
+
         Button('查询旅行社诚信')
           .layoutWeight(1)
           .height(45)
@@ -451,30 +467,14 @@ struct ComplaintPage {
       Row() {
         Text('总投诉数:')
           .fontSize(14)
-        Text(`${this.creditInfo?.totalComplaints}`)
+        Text(`${this.creditInfo?.totalComplaint}`)
           .fontSize(14)
       }
 
       Row() {
-        Text('待处理:')
+        Text('严重投诉数:')
           .fontSize(14)
-        Text(`${this.creditInfo?.pendingComplaints}`)
-          .fontSize(14)
-          .fontColor('#FF9500')
-      }
-
-      Row() {
-        Text('已办结:')
-          .fontSize(14)
-        Text(`${this.creditInfo?.resolvedComplaints}`)
-          .fontSize(14)
-          .fontColor('#34C759')
-      }
-
-      Row() {
-        Text('已驳回:')
-          .fontSize(14)
-        Text(`${this.creditInfo?.rejectedComplaints}`)
+        Text(`${this.creditInfo?.badComplaint}`)
           .fontSize(14)
           .fontColor('#FF3B30')
       }
@@ -513,6 +513,9 @@ struct ComplaintPage {
 
       Scroll() {
         Column({ space: 8 }) {
+          Text(`投诉编号: ${this.selectedComplaint?.complaintNo || '无'}`)
+            .fontSize(14)
+
           Text(`标题: ${this.selectedComplaint?.title}`)
             .fontSize(16)
             .fontWeight(FontWeight.Medium)
@@ -521,16 +524,22 @@ struct ComplaintPage {
             .fontSize(14)
             .fontColor('#666')
 
-          Text(`投诉类型: ${this.selectedComplaint?.complaintType}`)
+          Text(`游客姓名: ${this.selectedComplaint?.visitorName}`)
             .fontSize(14)
 
-          Text(`投诉人: ${this.selectedComplaint?.complainant}`)
+          Text(`游客电话: ${this.selectedComplaint?.visitorPhone}`)
             .fontSize(14)
 
-          Text(`联系方式: ${this.selectedComplaint?.contactInfo}`)
+          Text(`旅行社ID: ${this.selectedComplaint?.agencyId || '无'}`)
             .fontSize(14)
 
-          Text(`投诉时间: ${(this.selectedComplaint?.complaintTime || '').split('T')[0]}`)
+          Text(`导游ID: ${this.selectedComplaint?.guideId || '无'}`)
+            .fontSize(14)
+
+          Text(`投诉级别: ${this.getLevelText(this.selectedComplaint?.level || 1)}`)
+            .fontSize(14)
+
+          Text(`创建时间: ${(this.selectedComplaint?.createTime || '').split('T')[0]}`)
             .fontSize(14)
 
           Text(`状态: ${this.getStatusText(this.selectedComplaint?.status || '')}`)
@@ -595,20 +604,20 @@ struct ComplaintPage {
       Row({ space: 10 }) {
         Text('处理状态:')
           .fontSize(14)
-        
-        Radio({ value: '已办结', group: 'handleStatus' })
-          .checked(this.handleRequest.status === '已办结')
+
+        Radio({ value: ComplaintConstant.STATUS_DONE, group: 'handleStatus' })
+          .checked(this.handleRequest.status === ComplaintConstant.STATUS_DONE)
           .onChange((value: boolean) => {
-            if (value) this.handleRequest.status = '已办结'
+            if (value) this.handleRequest.status = ComplaintConstant.STATUS_DONE
           })
         Text('已办结')
           .fontSize(14)
           .margin({ right: 10 })
 
-        Radio({ value: '已驳回', group: 'handleStatus' })
-          .checked(this.handleRequest.status === '已驳回')
+        Radio({ value: ComplaintConstant.STATUS_REJECT, group: 'handleStatus' })
+          .checked(this.handleRequest.status === ComplaintConstant.STATUS_REJECT)
           .onChange((value: boolean) => {
-            if (value) this.handleRequest.status = '已驳回'
+            if (value) this.handleRequest.status = ComplaintConstant.STATUS_REJECT
           })
         Text('已驳回')
           .fontSize(14)
@@ -684,30 +693,34 @@ struct ComplaintPage {
   // 工具方法
   // ================================
   getStatusText(status: string): string {
-    const statusMap: Record<string, string> = {
-      '待处理': '待处理',
-      '已办结': '已办结',
-      '已驳回': '已驳回'
-    }
-    return statusMap[status] || status
+    const statusMap: Map<string, string> = new Map([
+      [ComplaintConstant.STATUS_PENDING, '待处理'],
+      [ComplaintConstant.STATUS_DONE, '已办结'],
+      [ComplaintConstant.STATUS_REJECT, '已驳回']
+    ])
+    return statusMap.get(status) || status
   }
 
   getStatusColor(status: string): ResourceColor {
-    const colorMap: Record<string, ResourceColor> = {
-      '待处理': '#FF9500',
-      '已办结': '#34C759',
-      '已驳回': '#FF3B30'
-    }
-    return colorMap[status] || '#666'
+    const colorMap: Map<string, ResourceColor> = new Map([
+      [ComplaintConstant.STATUS_PENDING, '#FF9500'],
+      [ComplaintConstant.STATUS_DONE, '#34C759'],
+      [ComplaintConstant.STATUS_REJECT, '#FF3B30']
+    ])
+    return colorMap.get(status) || '#666'
   }
 
   getStatusBgColor(status: string): ResourceColor {
-    const colorMap: Record<string, ResourceColor> = {
-      '待处理': '#FFF4E5',
-      '已办结': '#E8F7EB',
-      '已驳回': '#FFEBEE'
-    }
-    return colorMap[status] || '#F5F5F5'
+    const colorMap: Map<string, ResourceColor> = new Map([
+      [ComplaintConstant.STATUS_PENDING, '#FFF4E5'],
+      [ComplaintConstant.STATUS_DONE, '#E8F7EB'],
+      [ComplaintConstant.STATUS_REJECT, '#FFEBEE']
+    ])
+    return colorMap.get(status) || '#F5F5F5'
+  }
+
+  getLevelText(level: number): string {
+    return level === ComplaintConstant.COMPLAINT_LEVEL_SERIOUS ? '严重' : '普通'
   }
 
   getCreditColor(score: number): ResourceColor {
@@ -717,8 +730,17 @@ struct ComplaintPage {
     return '#FF3B30'
   }
 
+  getTokenFromStorage(): string {
+    try {
+      // 从本地存储获取真实 token（和你 alertAPI 用的一样）
+      const token = AppStorage.get<string>('token') || '';
+      return token.trim();
+    } catch (e) {
+      return '';
+    }
+  }
   // ================================
-  // API调用方法（优化版）
+  // API调用方法
   // ================================
   async loadComplaints() {
     this.loading = true
@@ -728,8 +750,8 @@ struct ComplaintPage {
         agencyId: this.filterAgencyId || undefined,
         guideId: this.filterGuideId || undefined
       }
-      
-      const result = await ComplaintApi.listComplaints(params)
+
+      const result = await ComplaintApi.listComplaints(this.token, params)
       if (result.code === 200) {
         this.complaintList = result.data || []
       } else {
@@ -744,6 +766,14 @@ struct ComplaintPage {
 
   async submitComplaint() {
     // 表单验证
+    if (!this.newComplaint.visitorName.trim()) {
+      prompt.showToast({ message: '请输入游客姓名', duration: 3000 })
+      return
+    }
+    if (!this.newComplaint.visitorPhone.trim()) {
+      prompt.showToast({ message: '请输入游客电话', duration: 3000 })
+      return
+    }
     if (!this.newComplaint.title.trim()) {
       prompt.showToast({ message: '请输入投诉标题', duration: 3000 })
       return
@@ -752,25 +782,21 @@ struct ComplaintPage {
       prompt.showToast({ message: '请输入投诉内容', duration: 3000 })
       return
     }
-    if (!this.newComplaint.complainant.trim()) {
-      prompt.showToast({ message: '请输入投诉人', duration: 3000 })
-      return
-    }
 
     try {
-      const result = await ComplaintApi.submitComplaint(this.newComplaint)
+      const result = await ComplaintApi.submitComplaint(this.token, this.newComplaint)
       if (result.code === 200) {
         prompt.showToast({ message: '投诉提交成功', duration: 3000 })
         this.loadComplaints()
         // 重置表单
         this.newComplaint = {
+          visitorName: '',
+          visitorPhone: '',
           title: '',
           content: '',
-          complaintType: '导游',
-          complainant: '',
-          contactInfo: '',
-          complaintTime: new Date().toISOString().split('T')[0],
-          status: '待处理'
+          agencyId: 0,
+          guideId: 0,
+          status: ComplaintConstant.STATUS_PENDING
         } as ComplaintEntity
         this.selectedTab = 0 // 切换到列表页
       } else {
@@ -793,11 +819,18 @@ struct ComplaintPage {
     }
 
     try {
-      const result = await ComplaintApi.handleComplaint(this.handleRequest)
+      const result = await ComplaintApi.handleComplaint(this.token, this.handleRequest)
       if (result.code === 200) {
         prompt.showToast({ message: '投诉处理成功', duration: 3000 })
         this.showHandleDialog = false
         this.loadComplaints()
+        // 重置处理表单
+        this.handleRequest = {
+          complaintId: 0,
+          handleUser: '',
+          handleResult: '',
+          status: ComplaintConstant.STATUS_DONE
+        }
       } else {
         prompt.showToast({ message: `处理失败: ${result.msg}`, duration: 3000 })
       }
@@ -809,7 +842,7 @@ struct ComplaintPage {
 
   async deleteComplaint(id: number) {
     try {
-      const result = await ComplaintApi.deleteComplaint(id)
+      const result = await ComplaintApi.deleteComplaint(this.token, id)
       if (result.code === 200) {
         prompt.showToast({ message: '删除成功', duration: 3000 })
         this.loadComplaints()
@@ -823,22 +856,23 @@ struct ComplaintPage {
   }
 
   async queryCredit() {
-    if (!this.creditId) {
-      prompt.showToast({ message: '请输入ID', duration: 3000 })
+    if (this.creditId <= 0) {
+      prompt.showToast({ message: '请输入有效的ID', duration: 3000 })
       return
     }
 
     try {
       let result: Result<CreditInfo>
       if (this.creditType === 'guide') {
-        result = await ComplaintApi.getGuideCredit(this.creditId)
+        result = await ComplaintApi.getGuideCredit(this.token, this.creditId)
       } else {
-        result = await ComplaintApi.getAgencyCredit(this.creditId)
+        result = await ComplaintApi.getAgencyCredit(this.token, this.creditId)
       }
 
       if (result.code === 200) {
         this.creditInfo = result.data
         this.showCreditDialog = false
+        prompt.showToast({ message: '查询成功', duration: 3000 })
       } else {
         prompt.showToast({ message: `查询失败: ${result.msg}`, duration: 3000 })
       }

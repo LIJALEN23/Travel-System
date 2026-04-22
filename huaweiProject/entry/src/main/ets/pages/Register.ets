@@ -1,6 +1,5 @@
 import router from '@ohos.router'
-import http from '@ohos.net.http'
-import { BusinessError } from '@ohos.base'
+import { registerRequest } from '../api/loginAPI' // 导入封装的注册API
 import { RegisterResult } from '../utils/Login'
 
 @Entry
@@ -134,9 +133,9 @@ struct Register {
     .alignItems(HorizontalAlign.Center)
   }
 
-  // 注册核心逻辑
-  handleRegister(): void {
-    // 1. 前端表单非空校验
+  // 注册核心逻辑（极简！无网络请求代码）
+  async handleRegister(): Promise<void> {
+    // 1. 前端表单校验（保留原有逻辑）
     if (!this.account || !this.password || !this.realName) {
       this.message = '账号、密码、姓名为必填项'
       return
@@ -151,53 +150,28 @@ struct Register {
     }
 
     this.message = '正在注册...'
-    const httpRequest = http.createHttp()
-    const registerUrl: string = 'http://192.168.52.143:8080/user/register'
+    try {
+      // 2. 调用封装好的注册API ✨
+      const res: RegisterResult = await registerRequest(
+        this.account,
+        this.password,
+        this.realName,
+        this.phone,
+        this.email,
+        this.remark
+      )
 
-    // 2. 调用后端注册接口，完全匹配你提供的JSON格式
-    httpRequest.request(
-      registerUrl,
-      {
-        method: http.RequestMethod.POST,
-        header: {
-          'Content-Type': 'application/json'
-        },
-        extraData: {
-          account: this.account,
-          password: this.password,
-          realName: this.realName,
-          phone: this.phone,
-          email: this.email,
-          role: 'OPERATOR', // 数据库默认角色OPERATOR
-          status: 1, // 默认正常状态1
-          remark: this.remark
-        }
-      },
-      (err: BusinessError, data: http.HttpResponse): void => {
-        if (err) {
-          this.message = '服务器连接失败，请检查后端是否启动'
-          console.error('注册请求异常', JSON.stringify(err))
-          return
-        }
-
-        try {
-          // 3. 强类型解析返回值，ArkTS无any警告
-          const res: RegisterResult = JSON.parse(data.result as string)
-
-          if (res.code === 200) {
-            this.message = '🎉 注册成功！即将跳转登录'
-            // 注册成功自动返回登录页
-            setTimeout((): void => {
-              router.back()
-            }, 1200)
-          } else {
-            this.message = res.msg || '注册失败，请重试'
-          }
-        } catch (e) {
-          this.message = '服务器数据解析异常'
-          console.error('注册解析错误', e)
-        }
+      // 3. 处理返回结果
+      if (res.code === 200) {
+        this.message = '🎉 注册成功！即将跳转登录'
+        setTimeout((): void => { router.back() }, 1200)
+      } else {
+        this.message = res.msg || '注册失败，请重试'
       }
-    )
+    } catch (err) {
+      // 4. 统一错误处理
+      this.message = '服务器连接失败，请检查后端是否启动'
+      console.error('注册请求异常', JSON.stringify(err))
+    }
   }
 }

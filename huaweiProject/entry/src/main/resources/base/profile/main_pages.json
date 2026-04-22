@@ -9,8 +9,15 @@
     "pages/Guide",
     "pages/Alert",
     "pages/Complaint",
-    "pages/Credit",
     "pages/ScenicDetailPage",
-    "pages/HotelDetailPage"
+    "pages/HotelDetailPage",
+    "pages/AgencyDetailPage",
+    "pages/AgencyOrderPage",
+    "pages/AgencyOrderDetailPage",
+    "pages/AgencyAbroadPage",
+    "pages/GuideDetailPage",
+    "pages/AgencyJobAuditPage",
+    "pages/AgencyOrderApplyAuditPage",
+    "pages/GuideOrderApplyPage"
   ]
 }

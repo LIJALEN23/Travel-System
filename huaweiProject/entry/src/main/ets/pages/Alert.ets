@@ -1,63 +1,86 @@
-import { AlertApi } from '../common/api/alert'
-import http from '@ohos.net.http'
+import router from '@ohos.router'
 import prompt from '@ohos.prompt'
-
-interface AlertItem {
-  id: number
-  title: string
-  level: string
-  status: string
-  content?: string
-  createTime?: string
-  operator?: string
-  leader?: string
-  handleResult?: string
-  handler?: string
-}
+import { AlertMessage, AlertHandle } from '../utils/Alert'
+import {
+  getAlertList,
+  getLatestUnprocessedAlerts,
+  getAlertById,
+  autoCheckAlerts,
+  checkPassAlert,
+  publishAlert,
+  handleAlert,
+  getHandleList
+} from '../api/alertAPI'
 
 interface ApiResponse {
   code: number
   msg: string
-  data: AlertItem[] | AlertItem
+  data: AlertMessage[] | AlertMessage
+}
+
+interface AutoCheckResponse {
+  code: number
+  msg: string
+}
+
+interface AlertOperationResponse {
+  code: number
+  msg: string
+}
+
+interface HandleListResponse {
+  code: number
+  msg: string
+  data: AlertHandle[]
 }
 
 @Entry
 @Component
 struct Alert {
-  @State alertList: AlertItem[] = []
-  @State latestAlerts: AlertItem[] = []
+  @State alertList: AlertMessage[] = []
+  @State latestAlerts: AlertMessage[] = []
   @State currentTab: number = 0
   @State showDetailDialog: boolean = false
   @State showHandleDialog: boolean = false
   @State showPublishDialog: boolean = false
-  @State currentAlert: AlertItem = this.getDefaultAlert()
+  @State showHandleHistoryDialog: boolean = false
+  @State currentAlert: AlertMessage = this.getDefaultAlert()
   @State handleResult: string = ''
   @State operatorName: string = ''
   @State leaderName: string = ''
   @State dialogMessage: string = ''
   @State dialogTitle: string = ''
+  @State handleHistory: AlertHandle[] = []
 
   aboutToAppear() {
     this.loadData()
     this.loadLatestAlerts()
   }
 
-  getDefaultAlert(): AlertItem {
+  getDefaultAlert(): AlertMessage {
     return {
       id: 0,
-      title: '',
-      level: '',
-      status: ''
+      content: '',
+      msgType: 'prompt',
+      status: 0,
+      extInfo: '',
+      createTime: '',
+      updateTime: ''
     }
   }
 
   loadData() {
-    AlertApi.getList()
-      .then((res: http.HttpResponse) => {
-        let responseText: string = res.result as string
-        let data: ApiResponse = JSON.parse(responseText) as ApiResponse
+    const token = AppStorage.get<string>("token") || ""
+    if (!token) {
+      prompt.showToast({ message: '请先登录' })
+      router.replaceUrl({ url: "pages/Login" })
+      return
+    }
+
+    getAlertList(token)
+      .then((data) => {
         if (data.code === 200) {
-          this.alertList = data.data as AlertItem[]
+          this.alertList = data.data as AlertMessage[]
         } else {
           prompt.showToast({ message: data.msg })
         }
@@ -68,12 +91,15 @@ struct Alert {
   }
 
   loadLatestAlerts() {
-    AlertApi.getLatestUnprocessedAlerts()
-      .then((res: http.HttpResponse) => {
-        let responseText: string = res.result as string
-        let data: ApiResponse = JSON.parse(responseText) as ApiResponse
+    const token = AppStorage.get<string>("token") || ""
+    if (!token) {
+      return
+    }
+
+    getLatestUnprocessedAlerts(token)
+      .then((data) => {
         if (data.code === 200) {
-          this.latestAlerts = data.data as AlertItem[]
+          this.latestAlerts = data.data as AlertMessage[]
         } else {
           prompt.showToast({ message: data.msg })
         }
@@ -84,10 +110,15 @@ struct Alert {
   }
 
   autoCheck() {
-    AlertApi.autoCheck()
-      .then((res: http.HttpResponse) => {
-        let responseText: string = res.result as string
-        let data: ApiResponse = JSON.parse(responseText) as ApiResponse
+    const token = AppStorage.get<string>("token") || ""
+    if (!token) {
+      prompt.showToast({ message: '请先登录' })
+      router.replaceUrl({ url: "pages/Login" })
+      return
+    }
+
+    autoCheckAlerts(token)
+      .then((data: AutoCheckResponse) => {
         prompt.showToast({ message: data.msg })
         if (data.code === 200) {
           this.loadData()
@@ -99,13 +130,17 @@ struct Alert {
       })
   }
 
-  showDetail(item: AlertItem) {
-    AlertApi.getById(item.id)
-      .then((res: http.HttpResponse) => {
-        let responseText: string = res.result as string
-        let data: ApiResponse = JSON.parse(responseText) as ApiResponse
+  showDetail(item: AlertMessage) {
+    const token = AppStorage.get<string>("token") || ""
+    if (!token) {
+      prompt.showToast({ message: '请先登录' })
+      return
+    }
+
+    getAlertById(token, item.id)
+      .then((data: ApiResponse) => {
         if (data.code === 200) {
-          this.currentAlert = data.data as AlertItem
+          this.currentAlert = data.data as AlertMessage
           this.dialogTitle = '告警详情'
           this.dialogMessage = this.getDetailMessage()
           this.showDetailDialog = true
@@ -118,16 +153,42 @@ struct Alert {
       })
   }
 
+  showHandleHistory(item: AlertMessage) {
+    const token = AppStorage.get<string>("token") || ""
+    if (!token) {
+      prompt.showToast({ message: '请先登录' })
+      return
+    }
+
+    getHandleList(token, item.id)
+      .then((data: HandleListResponse) => {
+        if (data.code === 200) {
+          this.handleHistory = data.data as AlertHandle[]
+          this.currentAlert = item
+          this.showHandleHistoryDialog = true
+        } else {
+          prompt.showToast({ message: data.msg })
+        }
+      })
+      .catch((error: Error) => {
+        prompt.showToast({ message: '获取处置记录失败：' + error.message })
+      })
+  }
+
   handleAlert() {
     if (!this.handleResult || !this.operatorName) {
       prompt.showToast({ message: '请填写完整信息' })
       return
     }
 
-    AlertApi.handle(this.currentAlert.id, this.handleResult, this.operatorName)
-      .then((res: http.HttpResponse) => {
-        let responseText: string = res.result as string
-        let data: ApiResponse = JSON.parse(responseText) as ApiResponse
+    const token = AppStorage.get<string>("token") || ""
+    if (!token) {
+      prompt.showToast({ message: '请先登录' })
+      return
+    }
+
+    handleAlert(token, this.currentAlert.id, this.handleResult, this.operatorName)
+      .then((data: AlertOperationResponse) => {
         prompt.showToast({ message: data.msg })
         if (data.code === 200) {
           this.showHandleDialog = false
@@ -141,16 +202,20 @@ struct Alert {
   }
 
   publishAlert() {
-    if (this.currentAlert.status === '未处理') {
+    const token = AppStorage.get<string>("token") || ""
+    if (!token) {
+      prompt.showToast({ message: '请先登录' })
+      return
+    }
+
+    if (this.currentAlert.status === 0) { // 未处理
       if (!this.operatorName) {
         prompt.showToast({ message: '请输入值班员姓名' })
         return
       }
 
-      AlertApi.checkPass(this.currentAlert.id, this.operatorName)
-        .then((res: http.HttpResponse) => {
-          let responseText: string = res.result as string
-          let data: ApiResponse = JSON.parse(responseText) as ApiResponse
+      checkPassAlert(token, this.currentAlert.id, this.operatorName)
+        .then((data: AlertOperationResponse) => {
           prompt.showToast({ message: data.msg })
           if (data.code === 200) {
             this.showPublishDialog = false
@@ -161,16 +226,14 @@ struct Alert {
         .catch((error: Error) => {
           prompt.showToast({ message: '审核失败：' + error.message })
         })
-    } else {
+    } else { // 待发布
       if (!this.leaderName) {
         prompt.showToast({ message: '请输入领导姓名' })
         return
       }
 
-      AlertApi.publish(this.currentAlert.id, this.leaderName)
-        .then((res: http.HttpResponse) => {
-          let responseText: string = res.result as string
-          let data: ApiResponse = JSON.parse(responseText) as ApiResponse
+      publishAlert(token, this.currentAlert.id, this.leaderName)
+        .then((data: AlertOperationResponse) => {
           prompt.showToast({ message: data.msg })
           if (data.code === 200) {
             this.showPublishDialog = false
@@ -184,48 +247,90 @@ struct Alert {
     }
   }
 
-  getStatusColor(status: string): Color {
+  getStatusText(status: number): string {
     switch (status) {
-      case '未处理': return Color.Red
-      case '待发布': return Color.Orange
-      case '已发布': return Color.Green
-      case '已处置': return Color.Blue
+      case 0: return '未处理'
+      case 1: return '待发布'
+      case 2: return '已发布'
+      case 3: return '已处置'
+      default: return '未知'
+    }
+  }
+
+  getStatusColor(status: number): Color {
+    switch (status) {
+      case 0: return Color.Red
+      case 1: return Color.Orange
+      case 2: return Color.Green
+      case 3: return Color.Blue
       default: return Color.Gray
     }
   }
 
-  getStatusBgColor(status: string): string {
+  getStatusBgColor(status: number): string {
     switch (status) {
-      case '未处理': return '#FFF1F0'
-      case '待发布': return '#FFF7E6'
-      case '已发布': return '#F6FFED'
-      case '已处置': return '#F0F5FF'
+      case 0: return '#FFF1F0'
+      case 1: return '#FFF7E6'
+      case 2: return '#F6FFED'
+      case 3: return '#F0F5FF'
       default: return '#FAFAFA'
     }
   }
 
+  getTitle(content: string): string {
+    // 从内容中提取标题，比如提取景区/酒店名称
+    const match = content.match(/^(.*?)[?：]/)
+    return match ? match[1] : content.substring(0, 20) + '...'
+  }
+
+  getLevel(msgType: string): string {
+    return msgType === 'alert' ? '告警' : '提示'
+  }
+
   getDetailMessage(): string {
     let alert = this.currentAlert
-    return `标题：${alert.title || ''}
-等级：${alert.level || ''}
-状态：${alert.status || ''}
-内容：${alert.content || ''}
-时间：${alert.createTime || ''}
-操作人：${alert.operator || ''}
-领导：${alert.leader || ''}
-处置结果：${alert.handleResult || ''}
-处置人：${alert.handler || ''}`
+    return `内容：${alert.content || ''}
+类型：${this.getLevel(alert.msgType)}
+状态：${this.getStatusText(alert.status)}
+创建时间：${alert.createTime || ''}
+更新时间：${alert.updateTime || ''}
+扩展信息：${alert.extInfo || ''}
+值班员：${alert.operator || '无'}
+领导：${alert.leader || '无'}
+处置结果：${alert.handleResult || '无'}
+处置人：${alert.handler || '无'}`
   }
 
   build() {
     Column() {
-      Text('告警调度中心')
-        .fontSize(24)
-        .fontWeight(FontWeight.Bold)
-        .margin({ top: 40, bottom: 20 })
+      // 顶部导航栏
+      Row({ space: 10 }) {
+        Button("返回")
+          .width(80)
+          .height(40)
+          .backgroundColor("#007DFF")
+          .fontSize(16)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(Color.White)
+          .borderRadius(8)
+          .onClick(() => {
+            router.back()
+          })
+
+        Text("告警调度中心")
+          .fontSize(24)
+          .fontWeight(FontWeight.Bold)
+          .flexGrow(1)
+          .textAlign(TextAlign.Center)
+
+        Blank().width(80)
+      }
+      .width("100%")
+      .padding({ left: 15, right: 15, top: 15, bottom: 15 })
+      .backgroundColor("#F5F7FA")
 
       // 选项卡
-      Row({ space: 20 }) {
+      Row({ space: 15 }) {
         Button('全部告警')
           .backgroundColor(this.currentTab === 0 ? '#007DFF' : '#F5F5F5')
           .fontColor(this.currentTab === 0 ? Color.White : '#333')
@@ -249,20 +354,20 @@ struct Alert {
             this.autoCheck()
           })
       }
-      .margin({ bottom: 20 })
+      .margin({ bottom: 20, top: 10 })
 
       // 告警列表
-      List() {
-        ForEach(this.currentTab === 0 ? this.alertList : this.latestAlerts, (item: AlertItem) => {
-          ListItem() {
+      Scroll() {
+        Column() {
+          ForEach(this.currentTab === 0 ? this.alertList : this.latestAlerts, (item: AlertMessage) => {
             Column() {
               Row() {
                 Column() {
-                  Text(item.title)
+                  Text(this.getTitle(item.content))
                     .fontSize(18)
                     .fontWeight(FontWeight.Bold)
 
-                  Text('等级：' + item.level)
+                  Text('类型：' + this.getLevel(item.msgType))
                     .fontSize(14)
                     .fontColor('#666')
 
@@ -272,7 +377,7 @@ struct Alert {
                 }
                 .layoutWeight(1)
 
-                Text(item.status)
+                Text(this.getStatusText(item.status))
                   .fontColor(this.getStatusColor(item.status))
                   .fontWeight(FontWeight.Bold)
               }
@@ -286,7 +391,15 @@ struct Alert {
                     this.showDetail(item)
                   })
 
-                if (item.status === '未处理') {
+                Button('处置记录')
+                  .backgroundColor('#722ED1')
+                  .fontColor(Color.White)
+                  .fontSize(12)
+                  .onClick(() => {
+                    this.showHandleHistory(item)
+                  })
+
+                if (item.status === 0) {
                   Button('审核通过')
                     .backgroundColor('#1890FF')
                     .fontColor(Color.White)
@@ -307,12 +420,13 @@ struct Alert {
                       this.showHandleDialog = true
                       this.currentAlert = item
                       this.handleResult = ''
+                      this.operatorName = ''
                       this.dialogTitle = '处置告警'
-                      this.dialogMessage = '请输入处置结果：'
+                      this.dialogMessage = '请输入处置信息：'
                     })
                 }
 
-                if (item.status === '待发布') {
+                if (item.status === 1) {
                   Button('发布')
                     .backgroundColor('#722ED1')
                     .fontColor(Color.White)
@@ -331,11 +445,11 @@ struct Alert {
             .padding(15)
             .backgroundColor(this.getStatusBgColor(item.status))
             .borderRadius(10)
-            .margin({ bottom: 10 })
-          }
-        })
+            .margin({ bottom: 10, left: 10, right: 10 })
+          })
+        }
       }
-      .width('90%')
+      .width('100%')
       .layoutWeight(1)
 
       // 详情弹窗
@@ -425,7 +539,7 @@ struct Alert {
             .fontSize(14)
             .margin({ bottom: 10 })
 
-          if (this.currentAlert.status === '未处理') {
+          if (this.currentAlert.status === 0) {
             TextInput({ placeholder: '值班员姓名' })
               .width('100%')
               .margin({ bottom: 20 })
@@ -442,7 +556,7 @@ struct Alert {
           }
 
           Row({ space: 10 }) {
-            Button(this.currentAlert.status === '未处理' ? '审核通过' : '发布')
+            Button(this.currentAlert.status === 0 ? '审核通过' : '发布')
               .backgroundColor('#1890FF')
               .fontColor(Color.White)
               .onClick(() => {
@@ -456,6 +570,59 @@ struct Alert {
                 this.showPublishDialog = false
               })
           }
+        }
+        .width('80%')
+        .padding(20)
+        .backgroundColor(Color.White)
+        .borderRadius(10)
+        .shadow({ radius: 10, color: '#00000020', offsetX: 0, offsetY: 2 })
+      }
+
+      // 处置记录弹窗
+      if (this.showHandleHistoryDialog) {
+        Column() {
+          Text('处置记录 - ' + this.getTitle(this.currentAlert.content))
+            .fontSize(20)
+            .fontWeight(FontWeight.Bold)
+            .margin({ bottom: 15 })
+
+          if (this.handleHistory.length === 0) {
+            Text('暂无处置记录')
+              .fontSize(14)
+              .fontColor('#666')
+              .margin({ bottom: 20 })
+          } else {
+            Scroll() {
+              Column() {
+                ForEach(this.handleHistory, (handle: AlertHandle) => {
+                  Column() {
+                    Text('处置人：' + handle.handler)
+                      .fontSize(14)
+                      .fontWeight(FontWeight.Bold)
+                    Text('处置结果：' + handle.handleResult)
+                      .fontSize(12)
+                      .fontColor('#666')
+                    Text('处置时间：' + handle.handleTime)
+                      .fontSize(12)
+                      .fontColor('#999')
+                  }
+                  .padding(10)
+                  .backgroundColor('#F5F5F5')
+                  .borderRadius(5)
+                  .margin({ bottom: 10 })
+                })
+              }
+            }
+            .height(200)
+            .margin({ bottom: 20 })
+          }
+
+          Button('关闭')
+            .backgroundColor('#007DFF')
+            .fontColor(Color.White)
+            .onClick(() => {
+              this.showHandleHistoryDialog = false
+            })
         }
         .width('80%')
         .padding(20)

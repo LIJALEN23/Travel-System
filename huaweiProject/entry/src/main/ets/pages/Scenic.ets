@@ -1,6 +1,7 @@
 import router from '@ohos.router'
-import http from '@ohos.net.http'
-import { Result, ScenicSpot } from '../utils/Scenic'
+import { ScenicSpot } from '../utils/Scenic'
+// 导入封装的景区API
+import { getScenicSpotList } from '../api/scenicAPI'
 
 @Entry
 @Component
@@ -13,6 +14,7 @@ struct Scenic {
     this.getSpotList();
   }
 
+  // 🔥 极简：仅调用封装API，无网络请求代码
   async getSpotList(spotName?: string): Promise<void> {
     const token = AppStorage.get<string>("token") || "";
     if (!token) {
@@ -20,27 +22,9 @@ struct Scenic {
       return;
     }
 
-    const httpRequest = http.createHttp();
     try {
-      let url = "http://192.168.52.143:8080/spot/list";
-      if (spotName && spotName.trim()) {
-        url += `?spotName=${encodeURIComponent(spotName.trim())}`;
-      }
-
-      const res = await httpRequest.request(
-        url,
-        {
-          method: http.RequestMethod.GET,
-          header: {
-            "Authorization": "Bearer " + token,
-            "Content-Type": "application/json"
-          }
-        }
-      );
-
-      const jsonString = res.result as string;
-      console.info("景区列表返回数据：", jsonString);
-      const result: Result<ScenicSpot[]> = JSON.parse(jsonString);
+      // 调用封装接口
+      const result = await getScenicSpotList(token, spotName);
 
       if (result.code === 200) {
         this.spotList = result.data;
@@ -70,36 +54,35 @@ struct Scenic {
 
   backToHome(): void {
     router.back();
-    // 若back无效，替换为：router.replaceUrl({ url: "pages/Home" });
   }
 
   goToDetail(id: number): void {
     console.info("点击景区ID：", id);
     router.pushUrl({
-      url: "pages/ScenicDetailPage", // 确认路径正确
+      url: "pages/ScenicDetailPage",
       params: { id: id }
     }, (err) => {
       if (err) {
         console.error("跳转详情失败：", err);
-        // 调试：打印完整路径错误
-        console.error("详情页路径应为：pages/ScenicDetailPage");
       }
     });
   }
 
+  // ======================
+  // 【UI 渲染代码完全不变】
+  // ======================
   build() {
     Column() {
       // 顶部导航栏
       Row({ space: 10 }) {
-        // 返回按钮
         Button("返回")
           .width(80)
-          .height(40) // 调整高度更协调
-          .backgroundColor("#007DFF") // 蓝色背景（替代透明）
+          .height(40)
+          .backgroundColor("#007DFF")
           .fontSize(16)
           .fontWeight(FontWeight.Medium)
-          .fontColor(Color.White) // 白色文字
-          .borderRadius(8) // 圆角
+          .fontColor(Color.White)
+          .borderRadius(8)
           .onClick(() => this.backToHome())
 
         Text("旅游景区管理")
@@ -111,16 +94,16 @@ struct Scenic {
         Blank().width(80)
       }
       .width("100%")
-      .padding({ left: 15, right: 15, top: 15, bottom: 15 }) // 增加上下padding
+      .padding({ left: 15, right: 15, top: 15, bottom: 15 })
       .backgroundColor("#F5F7FA")
 
-      // 搜索框区域（优化间距+对齐）
-      Row({ space: 8 }) { // 缩小按钮间距更紧凑
+      // 搜索框区域
+      Row({ space: 8 }) {
         TextInput({
           placeholder: "请输入景区名称搜索",
           text: this.searchText
         })
-          .width("70%") // 微调宽度，给按钮更多空间
+          .width("70%")
           .height(48)
           .backgroundColor(Color.White)
           .borderRadius(24)
@@ -146,10 +129,10 @@ struct Scenic {
           .borderRadius(24)
           .onClick(() => this.clearSearch())
       }
-      .width("95%") // 加宽搜索区域，更贴合屏幕
-      .margin({ left: 10, top: 10, bottom: 20 }) // 减少左间距，增加下间距
+      .width("95%")
+      .margin({ left: 10, top: 10, bottom: 20 })
 
-      // 提示文字（优化样式）
+      // 提示文字
       if (this.message !== "") {
         Text(this.message)
           .fontSize(16)
@@ -157,15 +140,15 @@ struct Scenic {
           .margin({ left: 15, bottom: 5 })
       }
 
-      // 景区列表（优化间距+卡片样式）
+      // 景区列表
       Scroll() {
-        Column({ space: 12 }) { // 缩小卡片间距更紧凑
+        Column({ space: 12 }) {
           ForEach(
             this.spotList,
             (item: ScenicSpot) => {
               Column(){
                 Text(item.spotName)
-                  .fontSize(22) // 加大标题字号
+                  .fontSize(22)
                   .fontWeight(FontWeight.Bold)
                   .margin({ bottom: 10 })
 
@@ -178,21 +161,21 @@ struct Scenic {
                   .fontSize(15)
                   .fontColor("#555555")
               }
-              .width("95%") // 加宽卡片，更贴合屏幕
-              .padding(25) // 增加内边距更大气
+              .width("95%")
+              .padding(25)
               .backgroundColor(Color.White)
-              .borderRadius(16) // 加大圆角更美观
-              .shadow({ radius: 6, color: "#00000015", offsetY: 3 }) // 加深阴影
+              .borderRadius(16)
+              .shadow({ radius: 6, color: "#00000015", offsetY: 3 })
               .onClick(() => {
                 this.goToDetail(item.id);
               })
-              .margin({ left: 0 }) // 确保卡片完全靠左
+              .margin({ left: 0 })
             },
             (item: ScenicSpot) => item.id.toString()
           )
         }
         .width("100%")
-        .margin({ left: 10, bottom: 30, top: 0 }) // 减少左间距，和搜索框对齐
+        .margin({ left: 10, bottom: 30, top: 0 })
       }
       .layoutWeight(1)
       .width("100%")
@@ -200,6 +183,6 @@ struct Scenic {
     .width("100%")
     .height("100%")
     .backgroundColor("#F5F7FA")
-    .padding({ bottom: 15 }) // 底部加padding，避免卡片贴底
+    .padding({ bottom: 15 })
   }
 }

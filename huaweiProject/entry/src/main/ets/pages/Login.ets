@@ -1,6 +1,5 @@
 import router from '@ohos.router'
-import http from '@ohos.net.http'
-import { BusinessError } from '@ohos.base'
+import { loginRequest } from '../api/loginAPI' // 导入封装的登录API
 import { LoginResult } from '../utils/Login'
 
 @Entry
@@ -92,66 +91,36 @@ struct Login {
   }
 
   // ================================
-  // 登录逻辑（带 token 全局存储）
+  // 登录逻辑（极简！只处理业务逻辑）
   // ================================
-  handleLogin(): void {
+  async handleLogin(): Promise<void> {
     if (this.username === '' || this.password === '') {
       this.message = '请输入账号和密码'
       return
     }
 
     this.message = '登录中...'
-    const httpRequest = http.createHttp()
-    const url = 'http://192.168.52.143:8080/user/login'
+    try {
+      // 调用封装好的API ✨ 核心简化点
+      const res: LoginResult = await loginRequest(this.username, this.password)
 
-    httpRequest.request(
-      url,
-      {
-        method: http.RequestMethod.POST,
-        header: {
-          'Content-Type': 'application/json'
-        },
-        extraData: {
-          account: this.username,
-          password: this.password
-        }
-      },
-      (err: BusinessError, data: http.HttpResponse): void => {
-        if (err) {
-          this.message = '连接后端失败，请检查服务是否启动'
-          console.error('请求错误：', JSON.stringify(err))
-          return
-        }
-
-        try {
-          const res: LoginResult = JSON.parse(data.result as string)
-
-          if (res.code === 200) {
-            this.message = '登录成功'
-
-            // ======================
-            // ✅ 核心：全局持久化存储 token
-            // 所有页面都能通过 AppStorage 获取
-            // ======================
-            const token = res.data.token;
-
-            AppStorage.setOrCreate('token', token)
-
-            console.log("登录成功，token已保存：" + token)
-
-            // 跳主页
-            setTimeout((): void => {
-              router.replaceUrl({ url: 'pages/Home' })
-            }, 500)
-          } else {
-            this.message = res.msg || '登录失败'
-          }
-        } catch (e) {
-          this.message = '数据解析失败'
-          console.error('解析失败：', e)
-        }
+      if (res.code === 200) {
+        this.message = '登录成功'
+        // 存储token
+        const token = res.data.token
+        AppStorage.setOrCreate('token', token)
+        console.log("登录成功，token已保存：" + token)
+        // 跳转主页
+        setTimeout((): void => {
+          router.replaceUrl({ url: 'pages/Home' })
+        }, 500)
+      } else {
+        this.message = res.msg || '登录失败'
       }
-    )
+    } catch (err) {
+      this.message = '网络请求失败，请检查后端服务'
+      console.error('登录请求错误：', JSON.stringify(err))
+    }
   }
 
   // 跳注册
