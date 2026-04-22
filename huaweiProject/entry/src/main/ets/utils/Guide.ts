@@ -47,6 +47,7 @@ export interface GuideQualification {
 export interface GuideJobApply {
   id?: number;
   guideId: number;
+  guideName?: string;
   agencyId: number;
   applyStatus: number;
   applyRemark: string;
@@ -58,8 +59,10 @@ export interface GuideJobApply {
 export interface GuideOrderApply {
   id?: number;
   guideId: number;
+  guideName?: string;
   agencyId: number;
   orderId: number;
+  orderTeamName?: string;
   applyReason: string;
   applyStatus?: number;
   createTime?: string;
@@ -100,7 +103,23 @@ export interface ApiResult<T> {
 export interface GuideDetailParams {
   id: number;
 }
+
 export interface AgencyPageParams {
   agencyId: number;
   agencyName: string;
+}
+// ================== 新增：行程单申领相关 ==================
+// 路由参数：导游申领行程单页面
+export interface GuideOrderApplyRouteParams {
+  guideId: number;
+  agencyId: number;
+  agencyName: string;
+}
+
+// 行程单申领接口入参（和后端完全匹配）
+export interface GuideOrderApplyRequest {
+  guideId: number;
+  agencyId: number;
+  orderId: number;
+  applyReason: string;
 }

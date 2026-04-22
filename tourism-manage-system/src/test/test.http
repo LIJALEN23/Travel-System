@@ -372,7 +372,7 @@ Authorization: Bearer {{token}}
 GET http://localhost:8080/guide/realTime/1
 Authorization: Bearer {{token}}
 
-+
+
 ### 1.19 查询导游诚信档案（新增）
 GET http://localhost:8080/guide/credit/1
 Authorization: Bearer {{token}}

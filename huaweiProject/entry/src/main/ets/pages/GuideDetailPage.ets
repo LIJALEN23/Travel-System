@@ -5,16 +5,13 @@ import { getGuideInfo, applyJob } from '../api/guideAPI';
 import { TravelAgency } from '../utils/Agency';
 import { getAgencyBaseInfo, getAgencyList } from '../api/agencyAPI';
 
-// 路由参数类型
 interface GuideDetailRouteParams {
   id: number
 }
 
-// ✅ 【唯一】@Entry 装饰器 + @Component 完全符合鸿蒙规范
 @Entry
 @Component
 struct GuideDetailPage {
-  // 页面状态
   private guideId: number = 0;
   @State detailData: GuideDetailVO | null = null;
   @State agencyInfo: TravelAgency | null = null;
@@ -24,7 +21,6 @@ struct GuideDetailPage {
   @State sheetOpen: boolean = false;
   @State selectedAgencyId: number = 0;
 
-  // 页面初始化
   aboutToAppear(): void {
     const params: GuideDetailRouteParams = router.getParams() as GuideDetailRouteParams;
     this.guideId = params?.id ?? 0;
@@ -37,7 +33,6 @@ struct GuideDetailPage {
     void this.loadPageData();
   }
 
-  // 数据加载
   async loadPageData(): Promise<void> {
     const token: string | undefined = AppStorage.get<string>("token");
     if (!token) {
@@ -69,13 +64,12 @@ struct GuideDetailPage {
     }
   }
 
-  // 提交求职申请
   async submitApply(): Promise<void> {
     if (this.selectedAgencyId <= 0) {
       promptAction.showToast({ message: "请先选择旅行社" });
       return;
     }
-    const token: string | undefined = AppStorage.get<string>("token");
+    const token = AppStorage.get<string>("token");
     if (!token) return;
 
     const reqBody: GuideJobApply = {
@@ -97,75 +91,62 @@ struct GuideDetailPage {
     }
   }
 
-  goBack(): void {
-    router.back();
+  // ====================== ✅ 新增：跳转申领行程单 ======================
+  goToApplyOrderPage() {
+    router.pushUrl({
+      url: "pages/GuideOrderApplyPage",
+      params: {
+        guideId: this.guideId,
+        agencyId: this.agencyInfo!.id!,
+        agencyName: this.agencyInfo!.agencyName
+      }
+    });
   }
 
+  goBack(): void { router.back(); }
   goLogin(): void {
     AppStorage.delete("token");
-    void router.replaceUrl({ url: "pages/Login" });
+    router.replaceUrl({ url: "pages/Login" });
   }
 
-  // 构建UI（唯一根节点，纯UI）
   build() {
     Column() {
-      // 顶部导航
       Row({ space: 10 }) {
         Button("返回")
-          .width(80)
-          .height(40)
-          .backgroundColor(Color.White)
-          .fontColor("#007DFF")
-          .borderRadius(8)
+          .width(80).height(40).backgroundColor(Color.White).fontColor("#007DFF").borderRadius(8)
           .onClick(() => { this.goBack(); })
 
-        Text("导游详情")
-          .fontSize(24)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(Color.White)
-          .layoutWeight(1)
-          .textAlign(TextAlign.Center)
-
+        Text("导游详情").fontSize(24).fontWeight(FontWeight.Bold).fontColor(Color.White).layoutWeight(1).textAlign(TextAlign.Center)
         Blank().width(80)
       }
-      .width("100%")
-      .padding(15)
-      .backgroundColor("#007DFF")
+      .width("100%").padding(15).backgroundColor("#007DFF")
 
-      // 加载提示
       if (this.loading || this.message) {
-        Text(this.message)
-          .fontSize(18)
-          .fontColor("#666")
-          .margin({ top: 50 })
+        Text(this.message).fontSize(18).fontColor("#666").margin({ top: 50 })
       }
 
-      // 详情内容
       if (this.detailData) {
         Scroll() {
           Column({ space: 15 }) {
             this.buildBaseInfoCard()
             this.buildCreditCard()
             this.buildAgencyCard()
+
+            // ====================== ✅ 新增：行程单申领功能区 ======================
+            if (this.agencyInfo) {
+              this.buildOrderApplyCard()
+            }
           }
           .padding(10)
         }
         .layoutWeight(1)
       }
-
     }
-    .width("100%")
-    .height("100%")
-    .backgroundColor("#F5F7FA")
-    .bindSheet($$this.sheetOpen, this.agencySelectSheet(), {
-      height: "60%",
-      dragBar: true
-    })
+    .width("100%").height("100%").backgroundColor("#F5F7FA")
+    .bindSheet($$this.sheetOpen, this.agencySelectSheet(), { height: "60%", dragBar: true })
   }
 
-  // 基础信息卡片
-  @Builder
-  buildBaseInfoCard() {
+  @Builder buildBaseInfoCard() {
     Column({ space: 10 }) {
       Text("基础信息").fontSize(20).fontWeight(FontWeight.Bold)
       Text(`姓名：${this.detailData!.guideInfo.name}`)
@@ -177,16 +158,10 @@ struct GuideDetailPage {
       Text(`在职状态：${this.detailData!.guideInfo.workStatus ? "在职" : "离职"}`)
         .fontColor(this.detailData!.guideInfo.workStatus ? "#00B42A" : "#F53F3F")
     }
-    .width("95%")
-    .padding(20)
-    .backgroundColor(Color.White)
-    .borderRadius(16)
-    .shadow({ radius: 6 })
+    .width("95%").padding(20).backgroundColor(Color.White).borderRadius(16).shadow({ radius: 6 })
   }
 
-  // 诚信档案卡片
-  @Builder
-  buildCreditCard() {
+  @Builder buildCreditCard() {
     Column({ space: 10 }) {
       Text("诚信档案").fontSize(20).fontWeight(FontWeight.Bold)
       Text(`信用评分：${this.detailData!.creditInfo.creditScore} 分`).fontColor("#007DFF")
@@ -194,16 +169,10 @@ struct GuideDetailPage {
       Text(`不良投诉：${this.detailData!.creditInfo.badComplaint}`)
       Text(`信用等级：${this.detailData!.creditInfo.creditLevel || "暂无评级"}`)
     }
-    .width("95%")
-    .padding(20)
-    .backgroundColor(Color.White)
-    .borderRadius(16)
-    .shadow({ radius: 6 })
+    .width("95%").padding(20).backgroundColor(Color.White).borderRadius(16).shadow({ radius: 6 })
   }
 
-  // 旅行社卡片
-  @Builder
-  buildAgencyCard() {
+  @Builder buildAgencyCard() {
     Column({ space: 10 }) {
       Text("所属旅行社").fontSize(20).fontWeight(FontWeight.Bold)
 
@@ -214,25 +183,25 @@ struct GuideDetailPage {
       } else {
         Text("未入职任何旅行社").fontColor("#FF6600")
         Button("提交求职申请")
-          .width(220)
-          .height(42)
-          .backgroundColor("#007DFF")
-          .onClick(() => {
-            this.selectedAgencyId = 0;
-            this.sheetOpen = true;
-          })
+          .width(220).height(42).backgroundColor("#007DFF")
+          .onClick(() => { this.selectedAgencyId = 0; this.sheetOpen = true; })
       }
     }
-    .width("95%")
-    .padding(20)
-    .backgroundColor(Color.White)
-    .borderRadius(16)
-    .shadow({ radius: 6 })
+    .width("95%").padding(20).backgroundColor(Color.White).borderRadius(16).shadow({ radius: 6 })
   }
 
-  // 旅行社选择弹窗
-  @Builder
-  agencySelectSheet() {
+  // ====================== ✅ 新增：行程单申领卡片 ======================
+  @Builder buildOrderApplyCard() {
+    Column({ space: 10 }) {
+      Text("行程单申领").fontSize(20).fontWeight(FontWeight.Bold)
+      Button("前往申领行程单")
+        .width("100%").height(45).backgroundColor("#007DFF").fontColor(Color.White)
+        .onClick(() => this.goToApplyOrderPage())
+    }
+    .width("95%").padding(20).backgroundColor(Color.White).borderRadius(16).shadow({ radius: 6 })
+  }
+
+  @Builder agencySelectSheet() {
     Column({ space: 15 }) {
       Text("选择意向旅行社").fontSize(22).fontWeight(FontWeight.Bold)
       Divider()
@@ -241,8 +210,7 @@ struct GuideDetailPage {
         Column({ space: 12 }) {
           ForEach(this.agencyList, (item: TravelAgency) => {
             Text(item.agencyName)
-              .width("100%")
-              .padding(14)
+              .width("100%").padding(14)
               .backgroundColor(this.selectedAgencyId === item.id ? "#007DFF" : "#F5F7FA")
               .fontColor(this.selectedAgencyId === item.id ? Color.White : "#333")
               .borderRadius(8)
@@ -258,7 +226,6 @@ struct GuideDetailPage {
           .onClick(() => { void this.submitApply(); })
       }
     }
-    .width("100%")
-    .padding(15)
+    .width("100%").padding(15)
   }
 }

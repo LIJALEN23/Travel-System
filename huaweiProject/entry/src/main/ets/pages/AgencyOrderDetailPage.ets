@@ -1,8 +1,9 @@
 import router from '@ohos.router';
-import http from '@ohos.net.http';
+import promptAction from '@ohos.promptAction';
 import { OrderDetailVO, OrderDetailParams } from '../utils/Agency';
-import { getOrderDetail } from '../api/agencyAPI'
-import Prompt from '@ohos.prompt';
+import { getOrderDetail } from '../api/agencyAPI';
+import { getRealTime } from '../api/guideAPI';
+import { GuideRealTime } from '../utils/Guide';
 
 @Entry
 @Component
@@ -11,22 +12,50 @@ struct AgencyOrderDetailPage {
   @State detail: OrderDetailVO | null = null;
   @State message: string = "加载中...";
 
+  // 导游实时状态
+  @State guideRealTime: GuideRealTime | null = null;
+
   aboutToAppear(): void {
     const params: OrderDetailParams = router.getParams() as OrderDetailParams;
     this.orderId = params.orderId;
     this.getOrderDetail();
   }
 
-  // 获取行程单详情
+  // 获取行程单详情 + 自动加载导游实时状态
   async getOrderDetail(): Promise<void> {
     try {
       const token = AppStorage.get<string>("token");
-      if (!token) { Prompt.showToast({ message: "登录已失效" }); router.replaceUrl({ url: "pages/Login" }); return; }
+      if (!token) {
+        promptAction.showToast({ message: "登录已失效" });
+        router.replaceUrl({ url: "pages/Login" });
+        return;
+      }
+
       const result = await getOrderDetail(token, this.orderId);
-      if (result.code === 200) { this.detail = result.data; this.message = ""; }
-      else { this.message = result.msg || "获取详情失败"; }
-    } catch (err) { this.message = "网络请求失败"; console.error(err); }
+      if (result.code === 200) {
+        this.detail = result.data;
+        this.message = "";
+
+        // ====================== 加载导游实时状态 ======================
+        if (
+          this.detail.order.orderStatus !== "待确定" &&
+          this.detail.order.guideId &&
+            this.detail.order.guideId > 0
+        ) {
+          const realTimeRes = await getRealTime(token, this.detail.order.guideId);
+          if (realTimeRes.code === 200) {
+            this.guideRealTime = realTimeRes.data;
+          }
+        }
+      } else {
+        this.message = result.msg || "获取详情失败";
+      }
+    } catch (err) {
+      this.message = "网络请求失败";
+      console.error(err);
+    }
   }
+
   build() {
     Column() {
       // 顶部导航
@@ -78,6 +107,25 @@ struct AgencyOrderDetailPage {
               `车辆状态：${this.detail.vehicle.vehicleStatus}`,
               `创建时间：${this.detail.vehicle.createTime}`
             ])
+
+            // ====================== 导游实时状态（条件渲染） ======================
+            if (
+              this.detail.order.orderStatus !== "待确定" &&
+              this.detail.order.guideId &&
+                this.detail.order.guideId > 0
+            ) {
+              if (this.guideRealTime) {
+                this.CardView("导游实时状态", [
+                  `工作状态：${this.guideRealTime.workStatus}`,
+                  `带团人数：${this.guideRealTime.teamSize} 人`,
+                  `当前经度：${this.guideRealTime.longitude}`,
+                  `当前纬度：${this.guideRealTime.latitude}`,
+                  `最后更新：${this.guideRealTime.updateTime}`
+                ]);
+              } else {
+                this.CardView("导游实时状态", ["导游未上传实时位置信息"]);
+              }
+            }
           }
           .padding(15)
         }

@@ -65,6 +65,14 @@ struct AgencyDetailPage {
     });
   }
 
+  // ====================== ✅ 新增：跳转行程单申领审核 ======================
+  goToOrderApplyAuditPage(): void {
+    router.pushUrl({
+      url: "pages/AgencyOrderApplyAuditPage",
+      params: { agencyId: this.agencyId, agencyName: this.agencyName } as AgencyPageParams
+    });
+  }
+
   toLogin(): void {
     AppStorage.delete("token");
     router.replaceUrl({ url: "pages/Login" });
@@ -113,7 +121,7 @@ struct AgencyDetailPage {
               Text(`地址：${this.detail.address}`)
               Text(`电话：${this.detail.contactPhone}`)
 
-              // ====================== 🔄 优化后的按钮排版 ======================
+              // ====================== 原有按钮 ======================
               // 第一行：电子行程单 + 出境游管理
               Row({ space: 10 }) {
                 Button("电子行程单")
@@ -134,7 +142,7 @@ struct AgencyDetailPage {
               }
               .margin({ top: 15 })
 
-              // 第二行：求职审核 单独居中展示
+              // 第二行：求职审核
               Row() {
                 Button("求职审核")
                   .width("60%")
@@ -147,7 +155,21 @@ struct AgencyDetailPage {
               .width("100%")
               .justifyContent(FlexAlign.Center)
               .margin({ top: 10 })
-              // ==========================================================
+
+              // ====================== 行程单审批 按钮 ======================
+              Row() {
+                Button("行程单审批")
+                  .width("60%")
+                  .height(40)
+                  .backgroundColor("#722ED1") // 紫色，区分其他按钮
+                  .fontColor(Color.White)
+                  .borderRadius(8)
+                  .onClick(() => this.goToOrderApplyAuditPage())
+              }
+              .width("100%")
+              .justifyContent(FlexAlign.Center)
+              .margin({ top: 10 })
+
             }
             .width("95%")
             .padding(20)
