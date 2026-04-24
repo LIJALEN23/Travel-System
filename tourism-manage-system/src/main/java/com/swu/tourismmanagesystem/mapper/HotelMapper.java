@@ -10,9 +10,9 @@ public interface HotelMapper {
     // 查询所有饭店
     List<HotelBase> selectAllHotel();
     // 根据景区ID查询对应酒店
-    List<HotelBase> selectHotelByScenicId(@Param("scenicId") Long scenicId);
+    List<HotelBase> selectHotelByScenicSpotName(@Param("spotName") String spotName);
     // 根据ID查询饭店详情
-    Map<String, Object> selectHotelDetailById(@Param("hotelId") Long hotelId);
+    HotelBase selectHotelDetailById(@Param("hotelId") Long hotelId);
 
     // 根据饭店ID查询管理人员
     List<HotelManager> selectManagerByHotelId(@Param("hotelId") Long hotelId);

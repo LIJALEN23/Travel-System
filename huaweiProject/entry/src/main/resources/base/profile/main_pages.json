@@ -1,6 +1,7 @@
 {
   "src": [
     "pages/Login",
+    "pages/Register",
     "pages/Home",
     "pages/Scenic",
     "pages/Hotel",
@@ -8,7 +9,15 @@
     "pages/Guide",
     "pages/Alert",
     "pages/Complaint",
-    "pages/Credit",
-    "pages/System"
+    "pages/ScenicDetailPage",
+    "pages/HotelDetailPage",
+    "pages/AgencyDetailPage",
+    "pages/AgencyOrderPage",
+    "pages/AgencyOrderDetailPage",
+    "pages/AgencyAbroadPage",
+    "pages/GuideDetailPage",
+    "pages/AgencyJobAuditPage",
+    "pages/AgencyOrderApplyAuditPage",
+    "pages/GuideOrderApplyPage"
   ]
 }
